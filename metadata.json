@@ -1,0 +1,9 @@
+{
+  "name": "Remix: AgencyOS",
+  "description": "A comprehensive agency management platform featuring CRM, project tracking, financial analytics, and AgencyOS-powered business intelligence.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

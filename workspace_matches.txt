@@ -1,0 +1,104 @@
+pages/TopUp.tsx:91:  const { workspace, addons, addUnbilledCharge } = useAgencySubscription();
+pages/TopUp.tsx:92:  const currentPlanId = workspace?.plan_id || 'free';
+pages/TopUp.tsx:101:    const extra = workspace?.credits_balance || 0;
+pages/TopUp.tsx:104:  }, [currentPlanId, workspace, addons]);
+pages/TopUp.tsx:107:    if (!selectedPkg || !workspace) return;
+pages/Plans.tsx:15:  const { workspace, loading } = useAgencySubscription();
+pages/Plans.tsx:20:  const [currentPlanId, setCurrentPlanId] = useState(() => workspace?.plan_id || localStorage.getItem('agencyos_current_plan') || 'free');
+pages/Plans.tsx:24:    (workspace?.billing_cycle as 'monthly' | 'annual') || (localStorage.getItem('agencyos_billing_cycle') as 'monthly' | 'annual') || 'monthly'
+pages/Plans.tsx:28:    if (workspace) {
+pages/Plans.tsx:29:      setCurrentPlanId(workspace.plan_id || 'free');
+pages/Plans.tsx:30:      setCurrentCycle(workspace.billing_cycle as 'monthly' | 'annual' || 'monthly');
+pages/Plans.tsx:32:  }, [workspace]);
+pages/PersonalBilling.tsx:38:    workspace, 
+pages/PersonalBilling.tsx:64:  const currentPlanId = workspace?.plan_id || 'free';
+pages/PersonalBilling.tsx:65:  const billingCycle = (workspace?.billing_cycle as 'monthly' | 'annual') || 'monthly';
+pages/PersonalBilling.tsx:342:        const totalCredits = (baseCredits + (workspace?.credits_balance || 0) + aiAddonCredits);
+pages/PersonalBilling.tsx:397:    workspace, 
+pages/PersonalBilling.tsx:486:          <p className="text-slate-500 dark:text-zinc-500 font-medium mt-2">Manage your workspace plan, usage limits, and financial details.</p>
+pages/Addons.tsx:27:  const { workspace, addons: purchasedAddons, addUnbilledCharge, loading } = useAgencySubscription();
+pages/Addons.tsx:36:  const [currentPlan, setCurrentPlan] = useState(() => workspace?.plan_id || localStorage.getItem('agencyos_current_plan') || 'free');
+pages/Addons.tsx:42:    if (workspace) {
+pages/Addons.tsx:43:      setCurrentPlan(workspace.plan_id || 'free');
+pages/Addons.tsx:45:  }, [workspace]);
+pages/Addons.tsx:51:    if (loading || !workspace) return;
+pages/Addons.tsx:57:    if (!selectedAddon || !workspace) return;
+pages/Addons.tsx:134:                 Extend your workspace capabilities with powerful integrations and capacity upgrades.
+pages/UpcomingInvoice.tsx:38:  const currentPlanId = workspace?.plan_id || 'free';
+pages/PublicBookingPage.tsx:94:          // Fetch bookings for this workspace to check for conflicts
+pages/Automation.tsx:311:                <p className="text-sm text-zinc-400 font-medium">Early access grants for premium workspace owners. Help us fast-track the release.</p>
+pages/AIAssistant.tsx:91:  const { workspace, deductCredits, addons } = useAgencySubscription();
+pages/AIAssistant.tsx:103:    const planId = workspace?.plan_id || 'free';
+pages/AIAssistant.tsx:109:    setCredits(baseCredits + (workspace?.credits_balance || 0) + aiAddonCredits);
+pages/AIAssistant.tsx:114:  }, [workspace, addons]);
+pages/Dashboard.tsx:115:  const { workspace, addons: purchasedAddons } = useAgencySubscription();
+pages/Dashboard.tsx:205:      const planId = workspace?.plan_id || localStorage.getItem('agencyos_current_plan') || 'free';
+pages/Dashboard.tsx:211:      const total = baseCredits + (workspace?.credits_balance || 0) + aiAddonCredits;
+pages/Dashboard.tsx:218:  }, [workspace, purchasedAddons]);
+pages/Dashboard.tsx:227:        const planId = workspace?.plan_id || localStorage.getItem('agencyos_current_plan') || 'free';
+pages/Dashboard.tsx:239:  }, [storageUsage, workspace, purchasedAddons]);
+pages/MarketingOptimization.tsx:127:  const { workspace, addons: purchasedAddons, deductCredits } = useAgencySubscription();
+pages/MarketingOptimization.tsx:169:    const planId = workspace?.plan_id || 'free';
+pages/MarketingOptimization.tsx:173:    return baseCredits + (workspace?.credits_balance || 0) + aiAddonCredits;
+pages/Help.tsx:112:Your Agency Identity is the fingerprint of your workspace. It dictates how you appear to clients in the portal, on invoices, and in email notifications.
+pages/Help.tsx:134:Your workspace contains:
+pages/Help.tsx:211:*   **Activity Log**: Audit trail of every action taken in the workspace.
+pages/Help.tsx:423:Keep your workspace clean.
+pages/Help.tsx:750:4.  **Activation**: Credits are added to your workspace immediately upon successful payment.`,
+pages/Help.tsx:829:**AIC (Agency Intelligence Core)** is your operational co-pilot. It is not just a chatbot; it has read-access to your workspace data (strictly permissioned).
+pages/Help.tsx:1022:*   **Isolation**: Your data is isolated to your workspace context.`,
+pages/Help.tsx:1525:4.  **Billing**: Each workspace has its own subscription (Enterprise plans may bundle billing).`,
+pages/Help.tsx:1623:2.  **Admin Reset**: Ask another Admin in your workspace to disable 2FA for your account temporarily.
+pages/DataMigration.tsx:74:         setStatus('Error: You must be logged in and have a workspace.');
+components/WorkspaceSwitcher.tsx:43:      alert("You must have at least one workspace.");
+components/WorkspaceSwitcher.tsx:46:    if (confirm("Are you sure you want to delete this workspace? All data associated with it will be permanently removed.")) {
+components/WorkspaceSettingsModal.tsx:12:  const workspace = workspaces.find(ws => ws.id === workspaceId);
+components/WorkspaceSettingsModal.tsx:15:  const [name, setName] = useState(workspace?.name || '');
+components/WorkspaceSettingsModal.tsx:16:  const [logoUrl, setLogoUrl] = useState(workspace?.logo_url || '');
+components/WorkspaceSettingsModal.tsx:54:      setError("Failed to update workspace settings.");
+components/WorkspaceSettingsModal.tsx:87:  if (!workspace) return null;
+components/WorkspaceSettingsModal.tsx:96:            <p className="text-xs font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest mt-1">{workspace.name}</p>
+hooks/useAgencySubscription.ts:12:  const [workspace, setWorkspace] = useState<any>(null);
+hooks/useAgencySubscription.ts:91:      if (!workspace) return;
+hooks/useAgencySubscription.ts:104:      }).eq('id', workspace.id);
+hooks/useAgencySubscription.ts:115:      if (!workspace) return;
+hooks/useAgencySubscription.ts:118:          workspace_id: workspace.id,
+hooks/useAgencySubscription.ts:130:      if (!workspace) return;
+hooks/useAgencySubscription.ts:137:      if (!workspace) return;
+hooks/useAgencySubscription.ts:141:          workspace_id: workspace.id,
+hooks/useAgencySubscription.ts:152:          credits_balance: (workspace.credits_balance || 0) + amount
+hooks/useAgencySubscription.ts:153:      }).eq('id', workspace.id);
+hooks/useAgencySubscription.ts:162:      if (!workspace) return;
+hooks/useAgencySubscription.ts:165:          credits_balance: (workspace.credits_balance || 0) + amount
+hooks/useAgencySubscription.ts:166:      }).eq('id', workspace.id);
+hooks/useAgencySubscription.ts:175:      if (!workspace) return;
+hooks/useAgencySubscription.ts:178:          credits_balance: (workspace.credits_balance || 0) - amount
+hooks/useAgencySubscription.ts:179:      }).eq('id', workspace.id);
+hooks/useAgencySubscription.ts:193:      if (!workspace) return;
+hooks/useAgencySubscription.ts:195:          workspace_id: workspace.id,
+hooks/useAgencySubscription.ts:206:      if (!workspace) return;
+hooks/useAgencySubscription.ts:208:          workspace_id: workspace.id,
+hooks/useAgencySubscription.ts:226:      if (!workspace) return;
+hooks/useAgencySubscription.ts:230:          workspace_id: workspace.id,
+hooks/useAgencySubscription.ts:241:      const { error: delError } = await supabase.from('unbilled_charges').delete().eq('workspace_id', workspace.id);
+hooks/useAgencySubscription.ts:255:    if (!currentWorkspaceId || currentWorkspaceId.startsWith('mock-workspace')) {
+hooks/useAgencySubscription.ts:278:    workspace,
+hooks/useOnboarding.ts:68:      console.log("DEBUG: fetchAnalytics called for workspace:", currentWorkspace?.id, "timeRange:", timeRange);
+hooks/useMessenger.ts:91:      // 1. Fetch conversations where current user is a participant and in the current workspace
+hooks/useMessenger.ts:321:        console.error("createConversation: User not authenticated or no workspace");
+hooks/useBookings.ts:109:        console.error('No workspace ID provided for booking');
+hooks/useClients.ts:15:    console.log("DEBUG: fetchClients called for user:", user?.uid, "workspace:", currentWorkspace?.id, "role:", user?.role);
+hooks/useClients.ts:24:      // Fetch all clients without workspace filtering for debugging
+hooks/useStorage.ts:109:      const filePath = `${currentWorkspace.id}/${user.uid}/${fileName}`; // Include workspace in path
+context/AuthContext.tsx:40:          // If no workspace ID, try to find the first workspace where they are an owner
+context/AuthContext.tsx:55:          // 1. Get workspace membership for current workspace
+context/AuthContext.tsx:133:              // 2. If no membership found, check if they are the owner of the workspace directly
+context/AuthContext.tsx:149:          // 3. Fallback: If no workspace context or membership, return basic profile with 'team' role
+context/AuthContext.tsx:229:            // Link any pending workspace invitations by email
+context/WorkspaceContext.tsx:92:        // Create default workspace if none exists
+context/WorkspaceContext.tsx:177:      console.error("Error creating workspace:", err);
+context/WorkspaceContext.tsx:193:      console.error("Error updating workspace:", err);
+context/WorkspaceContext.tsx:214:      console.error("Error deleting workspace:", err);
+App.tsx:296:          <p className="text-zinc-500 mb-8 max-w-md text-center">This feature is available on Starter plan and above. Upgrade your workspace to unlock this capability.</p>
+App.tsx:424:    // Catch-up logic for missed messages when app starts or workspace changes
+App.tsx:613:                        // In a real app, upload to storage and update workspace config
