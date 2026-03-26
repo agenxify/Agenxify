@@ -1,4 +1,5 @@
 import express from "express";
+import axios from "axios";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import cors from "cors";
@@ -113,6 +114,55 @@ async function startServer() {
     } catch (error) {
       console.error("Error fetching admin profile:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/send-email", async (req, res) => {
+    try {
+      const { to, name, fromName, subject, message, htmlContent, invoiceId, amount } = req.body;
+
+      if (!to) {
+        return res.status(400).json({ error: "Missing 'to' email address" });
+      }
+
+      const apiKey = process.env.BREVO_API_KEY;
+      if (!apiKey) {
+        console.error("BREVO_API_KEY is not set in environment variables.");
+        return res.status(500).json({ error: "Email service is not configured." });
+      }
+
+      // Construct HTML content if not provided
+      let finalHtmlContent = htmlContent;
+      if (!finalHtmlContent) {
+        finalHtmlContent = `
+          <p>Hello ${name || to},</p>
+          <p>${message || ""}</p>
+          ${invoiceId ? `<p>Invoice ID: ${invoiceId}</p>` : ""}
+          ${amount ? `<p>Amount: ${amount}</p>` : ""}
+        `;
+      }
+
+      const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: { email: "noreply@agenxify.com", name: fromName || "Agenxify" },
+          to: [{ email: to, name: name || to }],
+          subject: subject || "New Message from Agenxify",
+          htmlContent: finalHtmlContent,
+        },
+        {
+          headers: {
+            "api-key": apiKey,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+        }
+      );
+
+      res.status(200).json({ success: true, messageId: response.data.messageId });
+    } catch (error: any) {
+      console.error("Error sending email via Brevo:", error.response?.data || error.message);
+      res.status(500).json({ error: "Failed to send email" });
     }
   });
 
