@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { WorkspaceProvider } from './context/WorkspaceContext.tsx';
+import { Analytics } from '@vercel/analytics/react';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,6 +16,7 @@ root.render(
     <AuthProvider>
       <WorkspaceProvider>
         <App />
+        <Analytics />
       </WorkspaceProvider>
     </AuthProvider>
   </React.StrictMode>

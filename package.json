@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "2.39.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.13.6",
     "cors": "^2.8.6",
     "d3-array": "3.2.4",
