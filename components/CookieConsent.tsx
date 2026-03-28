@@ -75,8 +75,6 @@ export const CookieConsent: React.FC = () => {
   const applyConsent = (categories: ConsentCategories) => {
     // 1. Analytics Scripts
     if (categories.analytics) {
-      // Example: Load Google Analytics
-      // loadGoogleAnalytics('G-XXXXXXXXXX');
       console.log('Analytics cookies accepted. Loading analytics scripts...');
       window.dispatchEvent(new CustomEvent('consent_analytics_granted'));
     } else {
