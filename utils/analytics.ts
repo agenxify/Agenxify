@@ -1,63 +1,44 @@
 // This file demonstrates how to load tracking scripts dynamically based on user consent.
 // You can import this file in your main entry point (e.g., App.tsx or index.tsx) to initialize the listeners.
 
+declare global {
+  interface Window {
+    dataLayer: any[];
+    gtag: (...args: any[]) => void;
+  }
+}
+
 export const initAnalytics = () => {
-  // Listen for Analytics Consent
-  window.addEventListener('consent_analytics_granted', () => {
-    console.log('Initializing Google Analytics and GTM...');
-    loadGoogleAnalytics('G-56HN5BBTG0');
-    loadGoogleTagManager('GTM-KPSGCBV8');
-  });
+  // Listen for Cookie Consent Updates
+  window.addEventListener('cookie_consent_updated', (e: Event) => {
+    const customEvent = e as CustomEvent;
+    const consent = customEvent.detail;
 
-  // Listen for Marketing Consent
-  window.addEventListener('consent_marketing_granted', () => {
-    console.log('Initializing Meta Pixel...');
-    // Replace 'XXXXXXXXXXXXXXX' with your actual Meta Pixel ID
-    loadMetaPixel('XXXXXXXXXXXXXXX');
-  });
+    console.log('Updating Google Consent Mode...', consent);
 
-  // Listen for Functional Consent
-  window.addEventListener('consent_functional_granted', () => {
-    console.log('Initializing Functional Scripts...');
-    // Load your functional scripts here (e.g., Intercom, Zendesk, etc.)
+    if (typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        'analytics_storage': consent.analytics ? 'granted' : 'denied',
+        'ad_storage': consent.marketing ? 'granted' : 'denied',
+        'ad_user_data': consent.marketing ? 'granted' : 'denied',
+        'ad_personalization': consent.marketing ? 'granted' : 'denied',
+      });
+    }
+
+    if (consent.marketing) {
+      console.log('Initializing Meta Pixel...');
+      // Replace 'XXXXXXXXXXXXXXX' with your actual Meta Pixel ID
+      loadMetaPixel('XXXXXXXXXXXXXXX');
+    }
+
+    if (consent.functional) {
+      console.log('Initializing Functional Scripts...');
+      // Load your functional scripts here (e.g., Intercom, Zendesk, etc.)
+    }
   });
 };
 
-// Helper function to load Google Analytics
-const loadGoogleAnalytics = (measurementId: string) => {
-  if (document.getElementById('ga-script')) return; // Prevent duplicate loading
 
-  const script = document.createElement('script');
-  script.id = 'ga-script';
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  script.async = true;
-  document.head.appendChild(script);
-
-  const inlineScript = document.createElement('script');
-  inlineScript.innerHTML = `
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', '${measurementId}');
-  `;
-  document.head.appendChild(inlineScript);
-};
-
-// Helper function to load Google Tag Manager
-const loadGoogleTagManager = (gtmId: string) => {
-  if (document.getElementById('gtm-script')) return; // Prevent duplicate loading
-
-  const script = document.createElement('script');
-  script.id = 'gtm-script';
-  script.innerHTML = `
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','${gtmId}');
-  `;
-  document.head.appendChild(script);
-};
 
 // Helper function to load Meta Pixel
 const loadMetaPixel = (pixelId: string) => {
