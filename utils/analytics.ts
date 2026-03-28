@@ -4,9 +4,9 @@
 export const initAnalytics = () => {
   // Listen for Analytics Consent
   window.addEventListener('consent_analytics_granted', () => {
-    console.log('Initializing Google Analytics...');
-    // Replace 'G-XXXXXXXXXX' with your actual GA Measurement ID
-    loadGoogleAnalytics('G-XXXXXXXXXX');
+    console.log('Initializing Google Analytics and GTM...');
+    loadGoogleAnalytics('G-56HN5BBTG0');
+    loadGoogleTagManager('GTM-KPSGCBV8');
   });
 
   // Listen for Marketing Consent
@@ -41,6 +41,22 @@ const loadGoogleAnalytics = (measurementId: string) => {
     gtag('config', '${measurementId}');
   `;
   document.head.appendChild(inlineScript);
+};
+
+// Helper function to load Google Tag Manager
+const loadGoogleTagManager = (gtmId: string) => {
+  if (document.getElementById('gtm-script')) return; // Prevent duplicate loading
+
+  const script = document.createElement('script');
+  script.id = 'gtm-script';
+  script.innerHTML = `
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','${gtmId}');
+  `;
+  document.head.appendChild(script);
 };
 
 // Helper function to load Meta Pixel
