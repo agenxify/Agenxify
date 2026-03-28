@@ -1,164 +1,356 @@
-<!DOCTYPE html>
-<html lang="en" class="dark" data-accent="blue">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AgencyOS - Professional Agency Management</title>
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              dark: {
-                bg: '#000000',
-                surface: '#09090b',
-                elevated: '#18181b',
-                border: 'rgba(255,255,255,0.06)'
-              },
-              blue: {
-                50: 'var(--primary-50)',
-                100: 'var(--primary-100)',
-                500: 'var(--primary-500)',
-                600: 'var(--primary-600)',
-                700: 'var(--primary-700)',
-                900: 'var(--primary-900)'
-              }
-            },
-            boxShadow: {
-              'premium': '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
-              'glow': '0 0 20px -5px rgba(var(--primary-600-rgb), 0.3)'
-            }
-          }
+import React, { useState, useEffect } from 'react';
+import { X, Shield, Check, ChevronRight } from 'lucide-react';
+
+type ConsentCategories = {
+  essential: boolean;
+  analytics: boolean;
+  marketing: boolean;
+  functional: boolean;
+};
+
+const defaultConsent: ConsentCategories = {
+  essential: true, // Always true
+  analytics: false,
+  marketing: false,
+  functional: false,
+};
+
+const COOKIE_CONSENT_KEY = 'agencyos_cookie_consent_v2';
+
+export const getCookieConsent = (): ConsentCategories => {
+  const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      return defaultConsent;
+    }
+  }
+  return defaultConsent;
+};
+
+export const CookieConsent: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [consent, setConsent] = useState<ConsentCategories>(defaultConsent);
+  const [hasConsented, setHasConsented] = useState(false);
+
+  useEffect(() => {
+    const storedConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (storedConsent) {
+      try {
+        const parsed = JSON.parse(storedConsent);
+        setConsent(parsed);
+        setHasConsented(true);
+        applyConsent(parsed);
+      } catch (e) {
+        console.error('Error parsing cookie consent:', e);
+        setIsVisible(true);
+      }
+    } else {
+      // Delay showing banner slightly for better UX
+      const timer = setTimeout(() => setIsVisible(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Listen for custom event to open preferences from footer or elsewhere
+  useEffect(() => {
+    const handleOpenPreferences = () => {
+      const storedConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+      if (storedConsent) {
+        try {
+          setConsent(JSON.parse(storedConsent));
+        } catch (e) {
+          // ignore
         }
       }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;700&family=Poppins:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Nunito:wght@400;700&family=Ubuntu:wght@400;700&family=Rubik:wght@400;700&family=Mukta:wght@400;700&family=Kanit:wght@400;700&family=Anton&family=Cabin:wght@400;700&family=Fira+Sans:wght@400;700&family=Inconsolata:wght@400;700&family=Quicksand:wght@400;700&family=Work+Sans:wght@400;700&family=Crimson+Text:wght@400;700&family=DM+Sans:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Lora:wght@400;700&family=Dancing+Script&family=Pacifico&family=Satisfy&family=Parisienne&family=Cookie&family=Great+Vibes&family=Alex+Brush&family=Allura&family=Rochester&family=Sacramento&family=Yellowtail&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --primary-50: #eff6ff;
-        --primary-100: #dbeafe;
-        --primary-500: #3b82f6;
-        --primary-600: #2563eb;
-        --primary-700: #1d4ed8;
-        --primary-900: #1e3a8a;
-        --primary-600-rgb: 37, 99, 235;
-      }
+      setShowPreferences(true);
+      setIsVisible(true);
+    };
+    window.addEventListener('open_cookie_preferences', handleOpenPreferences);
+    return () => window.removeEventListener('open_cookie_preferences', handleOpenPreferences);
+  }, []);
 
-      [data-accent="indigo"] {
-        --primary-50: #eef2ff;
-        --primary-100: #e0e7ff;
-        --primary-500: #6366f1;
-        --primary-600: #4f46e5;
-        --primary-700: #4338ca;
-        --primary-900: #312e81;
-        --primary-600-rgb: 79, 70, 229;
-      }
+  const applyConsent = (categories: ConsentCategories) => {
+    // Dispatch a single event with the full consent state
+    window.dispatchEvent(new CustomEvent('cookie_consent_updated', { detail: categories }));
 
-      [data-accent="rose"] {
-        --primary-50: #fff1f2;
-        --primary-100: #ffe4e6;
-        --primary-500: #f43f5e;
-        --primary-600: #e11d48;
-        --primary-700: #be123c;
-        --primary-900: #881337;
-        --primary-600-rgb: 225, 29, 72;
-      }
+    // 1. Analytics Scripts
+    if (categories.analytics) {
+      console.log('Analytics cookies accepted.');
+    } else {
+      console.log('Analytics cookies rejected.');
+    }
 
-      [data-accent="emerald"] {
-        --primary-50: #ecfdf5;
-        --primary-100: #d1fae5;
-        --primary-500: #10b981;
-        --primary-600: #059669;
-        --primary-700: #047857;
-        --primary-900: #064e3b;
-        --primary-600-rgb: 5, 150, 105;
-      }
+    // 2. Marketing Scripts
+    if (categories.marketing) {
+      console.log('Marketing cookies accepted.');
+    } else {
+      console.log('Marketing cookies rejected.');
+    }
 
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8fafc;
-        color: #0f172a;
-        transition: background-color 0.3s ease, color 0.3s ease;
-      }
-      
-      .dark body {
-        background-color: #000000 !important;
-        color: #ffffff !important;
-      }
+    // 3. Functional Scripts
+    if (categories.functional) {
+      console.log('Functional cookies accepted.');
+    } else {
+      console.log('Functional cookies rejected.');
+    }
+  };
 
-      /* Unified Surface Mapping - Relaxed to allow Tailwind opacity modifiers */
-      .dark .bg-white { background-color: #0a0a0a !important; }
-      .dark .bg-slate-50, .dark .bg-slate-100 { background-color: #000000 !important; }
-      .dark .bg-slate-200 { background-color: #1c1c1e !important; }
-      
-      /* Neutral Typography for Dark Mode */
-      .dark .text-slate-900, .dark .text-slate-800 { color: #f4f4f5 !important; }
-      .dark .text-slate-700, .dark .text-slate-600 { color: #d4d4d8 !important; }
-      .dark .text-slate-500 { color: #a1a1aa !important; }
-      .dark .text-slate-400 { color: #71717a !important; }
+  const saveConsent = (newConsent: ConsentCategories) => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(newConsent));
+    setConsent(newConsent);
+    setHasConsented(true);
+    setIsVisible(false);
+    setShowPreferences(false);
+    applyConsent(newConsent);
+  };
 
-      /* Border Normalization */
-      .dark .border, .dark .border-slate-100, .dark .border-slate-200, .dark .border-slate-300 {
-        border-color: rgba(255, 255, 255, 0.08) !important;
-      }
+  const handleAcceptAll = () => {
+    saveConsent({
+      essential: true,
+      analytics: true,
+      marketing: true,
+      functional: true,
+    });
+  };
 
-      /* Dynamic Shadow System */
-      .dark .shadow-sm, .dark .shadow-md, .dark .shadow-lg, .dark .shadow-xl {
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
-      }
+  const handleRejectNonEssential = () => {
+    saveConsent({
+      essential: true,
+      analytics: false,
+      marketing: false,
+      functional: false,
+    });
+  };
 
-      .shadow-primary { box-shadow: 0 10px 25px -5px rgba(var(--primary-600-rgb), 0.4); }
-      .dark .shadow-primary { box-shadow: 0 15px 35px -10px rgba(var(--primary-600-rgb), 0.5) !important; }
+  const handleSavePreferences = () => {
+    saveConsent(consent);
+  };
 
-      .dark .bg-blue-50 { background-color: rgba(var(--primary-600-rgb), 0.08) !important; }
-      
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      .dark ::-webkit-scrollbar-track { background: #000000; }
-      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-      .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+  const toggleCategory = (category: keyof ConsentCategories) => {
+    if (category === 'essential') return; // Cannot toggle essential
+    setConsent(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
-      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-      .animate-in.fade-in { animation: fade-in 0.3s ease-out; }
-      .scrollbar-hide::-webkit-scrollbar { display: none; }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react-router-dom": "https://esm.sh/react-router-dom@7.1.5?external=react,react-dom",
-    "lucide-react": "https://esm.sh/lucide-react@0.474.0?external=react",
-    "@google/genai": "https://esm.sh/@google/genai@1.3.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3",
-    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
-    "d3-color": "https://esm.sh/d3-color@3.1.0",
-    "d3-scale": "https://esm.sh/d3-scale@4.0.2",
-    "d3-shape": "https://esm.sh/d3-shape@3.2.0",
-    "d3-path": "https://esm.sh/d3-path@3.1.0",
-    "d3-array": "https://esm.sh/d3-array@3.2.4",
-    "d3-interpolate": "https://esm.sh/d3-interpolate@3.0.1",
-    "d3-format": "https://esm.sh/d3-format@3.1.0",
-    "d3-time": "https://esm.sh/d3-time@3.1.0",
-    "d3-time-format": "https://esm.sh/d3-time-format@4.1.0",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
-    "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
-  <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPSGCBV8"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
-</html>
+  if (!isVisible && hasConsented && !showPreferences) return null;
+
+  return (
+    <>
+      {/* Main Banner */}
+      <div 
+        className={`fixed bottom-0 left-0 right-0 z-[9999] p-4 sm:p-6 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isVisible && !showPreferences ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="max-w-4xl mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-slate-200/50 dark:border-zinc-800/50 p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1.5 flex items-center gap-2">
+              <Shield size={16} className="text-blue-600 dark:text-blue-400" />
+              Privacy & Cookies
+            </h3>
+            <p className="text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+              We use cookies to improve your experience, analyze site traffic, and serve tailored content. By clicking "Accept All", you consent to our use of cookies. Read our <a href="#/privacy-policy" onClick={() => setIsVisible(false)} className="text-slate-900 dark:text-white underline decoration-slate-300 dark:decoration-zinc-600 underline-offset-2 hover:decoration-slate-900 dark:hover:decoration-white transition-colors">Privacy Policy</a> to learn more.
+            </p>
+          </div>
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto shrink-0">
+            <button 
+              onClick={() => setShowPreferences(true)}
+              className="flex-1 sm:flex-none px-4 py-2 text-[13px] font-semibold text-slate-700 dark:text-zinc-300 bg-transparent hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors whitespace-nowrap"
+            >
+              Preferences
+            </button>
+            <button 
+              onClick={handleRejectNonEssential}
+              className="flex-1 sm:flex-none px-4 py-2 text-[13px] font-semibold text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-xl transition-colors whitespace-nowrap"
+            >
+              Reject All
+            </button>
+            <button 
+              onClick={handleAcceptAll}
+              className="flex-1 sm:flex-none px-4 py-2 text-[13px] font-semibold text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-xl shadow-sm transition-all whitespace-nowrap"
+            >
+              Accept All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Preferences Modal */}
+      {showPreferences && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-zinc-800/50 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-5 border-b border-slate-100 dark:border-zinc-800/50 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Shield size={18} className="text-blue-600 dark:text-blue-400" />
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Privacy Preferences</h2>
+              </div>
+              <button 
+                onClick={() => {
+                  if (hasConsented) {
+                    setShowPreferences(false);
+                    setIsVisible(false);
+                  } else {
+                    setShowPreferences(false);
+                    setIsVisible(true);
+                  }
+                }} 
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                aria-label="Close preferences"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+              <p className="text-[13px] text-slate-600 dark:text-zinc-400 mb-6 leading-relaxed">
+                When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences or your device and is mostly used to make the site work as you expect it to.
+              </p>
+
+              <div className="space-y-3">
+                {/* Essential Cookies */}
+                <div className="p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800/60 bg-slate-50/50 dark:bg-zinc-800/20">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-1">Strictly Necessary</h4>
+                      <p className="text-[12px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                        These cookies are essential for the website to function and cannot be switched off. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms.
+                      </p>
+                    </div>
+                    <div className="shrink-0 pt-0.5">
+                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md">Always Active</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analytics Cookies */}
+                <div className="p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800/60 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors cursor-pointer group" onClick={() => toggleCategory('analytics')}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-1">Analytics</h4>
+                      <p className="text-[12px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                        These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site.
+                      </p>
+                    </div>
+                    <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('analytics');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.analytics ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.analytics}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.analytics ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marketing Cookies */}
+                <div className="p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800/60 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors cursor-pointer group" onClick={() => toggleCategory('marketing')}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-1">Marketing</h4>
+                      <p className="text-[12px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                        These cookies may be set through our site by our advertising partners. They may be used by those companies to build a profile of your interests and show you relevant adverts on other sites.
+                      </p>
+                    </div>
+                    <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('marketing');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.marketing ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.marketing}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.marketing ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Functional Cookies */}
+                <div className="p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800/60 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors cursor-pointer group" onClick={() => toggleCategory('functional')}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-1">Functional</h4>
+                      <p className="text-[12px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                        These cookies enable the website to provide enhanced functionality and personalisation. They may be set by us or by third party providers whose services we have added to our pages.
+                      </p>
+                    </div>
+                    <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('functional');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.functional ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.functional}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.functional ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50 shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex gap-4 text-[12px] font-medium text-slate-500 dark:text-zinc-400">
+                <a href="#/privacy-policy" onClick={() => setShowPreferences(false)} className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#/cookie-policy" onClick={() => setShowPreferences(false)} className="hover:text-slate-900 dark:hover:text-white transition-colors">Cookie Policy</a>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button 
+                  onClick={handleRejectNonEssential}
+                  className="flex-1 sm:flex-none px-4 py-2 text-[13px] font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 rounded-xl transition-colors"
+                >
+                  Reject All
+                </button>
+                <button 
+                  onClick={handleSavePreferences}
+                  className="flex-1 sm:flex-none px-4 py-2 text-[13px] font-semibold text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-xl shadow-sm transition-all"
+                >
+                  Save Choices
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
