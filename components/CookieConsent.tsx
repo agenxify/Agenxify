@@ -73,27 +73,28 @@ export const CookieConsent: React.FC = () => {
   }, []);
 
   const applyConsent = (categories: ConsentCategories) => {
+    // Dispatch a single event with the full consent state
+    window.dispatchEvent(new CustomEvent('cookie_consent_updated', { detail: categories }));
+
     // 1. Analytics Scripts
     if (categories.analytics) {
-      console.log('Analytics cookies accepted. Loading analytics scripts...');
-      window.dispatchEvent(new CustomEvent('consent_analytics_granted'));
+      console.log('Analytics cookies accepted.');
     } else {
-      console.log('Analytics cookies rejected. Blocking analytics scripts...');
-      // Remove cookies if previously set (implementation depends on specific cookies)
+      console.log('Analytics cookies rejected.');
     }
 
     // 2. Marketing Scripts
     if (categories.marketing) {
-      // Example: Load Meta Pixel
-      // loadMetaPixel('XXXXXXXXXXXXXXX');
-      console.log('Marketing cookies accepted. Loading marketing scripts...');
-      window.dispatchEvent(new CustomEvent('consent_marketing_granted'));
+      console.log('Marketing cookies accepted.');
+    } else {
+      console.log('Marketing cookies rejected.');
     }
 
     // 3. Functional Scripts
     if (categories.functional) {
       console.log('Functional cookies accepted.');
-      window.dispatchEvent(new CustomEvent('consent_functional_granted'));
+    } else {
+      console.log('Functional cookies rejected.');
     }
   };
 
@@ -236,9 +237,25 @@ export const CookieConsent: React.FC = () => {
                       </p>
                     </div>
                     <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${consent.analytics ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 dark:border-zinc-600 group-hover:border-emerald-500/50'}`}>
-                        <div className={`w-2.5 h-2.5 rounded-full bg-white transition-transform duration-200 ${consent.analytics ? 'scale-100' : 'scale-0'}`} />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('analytics');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.analytics ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.analytics}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.analytics ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -253,9 +270,25 @@ export const CookieConsent: React.FC = () => {
                       </p>
                     </div>
                     <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${consent.marketing ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 dark:border-zinc-600 group-hover:border-emerald-500/50'}`}>
-                        <div className={`w-2.5 h-2.5 rounded-full bg-white transition-transform duration-200 ${consent.marketing ? 'scale-100' : 'scale-0'}`} />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('marketing');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.marketing ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.marketing}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.marketing ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -270,9 +303,25 @@ export const CookieConsent: React.FC = () => {
                       </p>
                     </div>
                     <div className="shrink-0 pt-0.5 flex items-center justify-center p-2 -m-2">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${consent.functional ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 dark:border-zinc-600 group-hover:border-emerald-500/50'}`}>
-                        <div className={`w-2.5 h-2.5 rounded-full bg-white transition-transform duration-200 ${consent.functional ? 'scale-100' : 'scale-0'}`} />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCategory('functional');
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                          consent.functional ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-600'
+                        }`}
+                        role="switch"
+                        aria-checked={consent.functional}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            consent.functional ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
