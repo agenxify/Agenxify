@@ -33,7 +33,7 @@ const PlanDetails: React.FC = () => {
   }
 
   const price = billingCycle === 'annual' ? plan.price : Math.round(plan.price * 1.2);
-  const isEnterprisePlus = plan.id === 'enterprise_plus';
+  const isEnterprisePlus = plan.id === 'enterprise';
 
   const renderLimit = (value: number | undefined) => {
     if (value === undefined) return 'N/A';
@@ -47,8 +47,7 @@ const PlanDetails: React.FC = () => {
       case 'free': return <Zap size={48} className="text-slate-300 drop-shadow-[0_0_15px_rgba(203,213,225,0.5)]" />;
       case 'starter': return <Zap size={48} className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />;
       case 'growth': return <Star size={48} className="text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />;
-      case 'enterprise': return <Globe size={48} className="text-rose-400 drop-shadow-[0_0_15px_rgba(251,113,133,0.5)]" />;
-      case 'enterprise_plus': return <Crown size={48} className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" />;
+      case 'enterprise': return <Crown size={48} className="text-rose-400 drop-shadow-[0_0_15px_rgba(251,113,133,0.5)]" />;
       default: return <Sparkles size={48} className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />;
     }
   };
@@ -186,7 +185,7 @@ const PlanDetails: React.FC = () => {
               </motion.div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className={`text-5xl md:text-6xl font-black tracking-tighter ${isEnterprisePlus ? 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400' : 'text-white'}`}>
+                  <h1 className={`text-5xl md:text-6xl font-black tracking-tighter ${isEnterprisePlus ? 'text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400' : 'text-white'}`}>
                     {plan.name}
                   </h1>
                   {plan.popular && (
@@ -218,7 +217,7 @@ const PlanDetails: React.FC = () => {
                   <span className="text-sm font-bold text-zinc-500">/ mo</span>
                 </div>
                 {billingCycle === 'annual' && price > 0 && (
-                  <p className="text-xs text-emerald-500 font-bold mt-1">Billed ${price * 12} yearly</p>
+                  <p className="text-xs text-rose-500 font-bold mt-1">Billed ${price * 12} yearly</p>
                 )}
               </div>
             </div>
@@ -288,7 +287,7 @@ const PlanDetails: React.FC = () => {
                 {isEnterprisePlus && (
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">Security</span>
-                    <span className="font-bold text-emerald-400">Advanced SSO</span>
+                    <span className="font-bold text-rose-400">Advanced SSO</span>
                   </div>
                 )}
               </div>
@@ -418,15 +417,15 @@ const PlanDetails: React.FC = () => {
                     <ul className="space-y-3">
                       <li className="flex items-center justify-between text-sm">
                         <span className="text-zinc-300">SSO (SAML)</span>
-                        <span className="font-bold text-emerald-400"><Check size={16} /></span>
+                        <span className="font-bold text-rose-400"><Check size={16} /></span>
                       </li>
                       <li className="flex items-center justify-between text-sm">
                         <span className="text-zinc-300">Audit Logs</span>
-                        <span className="font-bold text-emerald-400"><Check size={16} /></span>
+                        <span className="font-bold text-rose-400"><Check size={16} /></span>
                       </li>
                       <li className="flex items-center justify-between text-sm">
                         <span className="text-zinc-300">Advanced Permissions</span>
-                        <span className="font-bold text-emerald-400"><Check size={16} /></span>
+                        <span className="font-bold text-rose-400"><Check size={16} /></span>
                       </li>
                     </ul>
                   </div>

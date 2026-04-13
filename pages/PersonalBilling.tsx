@@ -807,7 +807,7 @@ const PersonalBilling: React.FC = () => {
                 <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Plan Overview</h4>
                 <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500">Select to Upgrade</span>
              </div>
-             <div className="grid grid-cols-5 gap-2">
+             <div className="grid grid-cols-4 gap-2">
                 {AVAILABLE_PLANS.map((plan) => {
                    const isActive = plan.id === currentPlanId;
                    const isPending = pendingPlan?.id === plan.id;
@@ -827,8 +827,7 @@ const PersonalBilling: React.FC = () => {
                             {plan.id === 'free' && <Zap size={16} />}
                             {plan.id === 'starter' && <Zap size={16} />}
                             {plan.id === 'growth' && <Star size={16} />}
-                            {plan.id === 'enterprise' && <Globe size={16} />}
-                            {plan.id === 'enterprise_plus' && <Crown size={16} />}
+                            {plan.id === 'enterprise' && <Crown size={16} />}
                          </div>
                          <p className={`text-[8px] font-black uppercase tracking-tighter text-center leading-none ${isActive ? 'text-white' : 'text-slate-500 dark:text-zinc-500'}`}>
                             {plan.name}

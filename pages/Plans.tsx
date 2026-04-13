@@ -78,13 +78,6 @@ const Plans: React.FC = () => {
         };
       case 'enterprise':
         return {
-          container: "bg-rose-900/10 border-rose-500/30 hover:border-rose-500/50 hover:shadow-rose-500/20",
-          button: "bg-rose-600 text-white hover:bg-rose-500",
-          icon: "text-rose-400 bg-rose-500/10",
-          glow: "bg-rose-500"
-        };
-      case 'enterprise_plus':
-        return {
           container: "bg-black border-transparent relative overflow-hidden group/rgb",
           // Updated to a gradient button
           button: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white hover:brightness-110 shadow-[0_0_20px_rgba(168,85,247,0.4)] border-none",
@@ -181,12 +174,12 @@ const Plans: React.FC = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
            {AVAILABLE_PLANS.map((plan, index) => {
               const isCurrent = plan.id === currentPlanId;
               const styles = getTierStyles(plan.id);
               const price = billingCycle === 'annual' ? plan.price : Math.round(plan.price * 1.2); 
-              const isEnterprisePlus = plan.id === 'enterprise_plus';
+              const isEnterprisePlus = plan.id === 'enterprise';
               const currentIndex = getCurrentPlanIndex();
               const targetIndex = getTargetPlanIndex(plan.id);
               
@@ -244,8 +237,7 @@ const Plans: React.FC = () => {
                             {plan.id === 'starter' && <Zap size={24} />}
                             {plan.id === 'growth' && <Star size={24} />}
                             {plan.id === 'pro' && <Shield size={24} />}
-                            {plan.id === 'enterprise' && <Globe size={24} />}
-                            {plan.id === 'enterprise_plus' && <Crown size={24} />}
+                            {plan.id === 'enterprise' && <Crown size={24} />}
                          </div>
                          {plan.popular && (
                             <span className="px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">Popular</span>
