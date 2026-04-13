@@ -312,7 +312,7 @@ export const AVAILABLE_PLANS = [
     id: 'enterprise',
     name: 'Enterprise',
     price: 249,
-    desc: 'For Big Enterprises',
+    desc: 'For large big agenncies',
     features: ['300 Requests', '1,000 Tickets', '30,000 Zify AI Credits', 'Unlimited Pipelines', 'Unlimited Booking Forms', '100 Clients', '20 Team Members', '200 Services', 'Unlimited Onboarding Forms', 'Unlimited Invoices & Estimates', '150 Marketing Emails', '150 Pages', '250 GB Storage', '15 Workspaces'],
     color: 'from-rose-600 to-orange-600',
     accent: 'rose',
@@ -332,31 +332,6 @@ export const AVAILABLE_PLANS = [
     ticketsLimit: 1000,
     marketingEmailsLimit: 150,
     workspacesLimit: 15
-  },
-  {
-    id: 'enterprise_plus',
-    name: 'Enterprise+',
-    price: 499,
-    desc: 'Zify AI as Your OS',
-    features: ['Unlimited Requests', 'Unlimited Tickets', '50,000 Zify AI Credits', 'Unlimited Pipelines', 'Unlimited Booking Forms', '1,000 Clients', '700 Team Members', 'Unlimited Services', 'Unlimited Onboarding Forms', 'Unlimited Invoices & Estimates', '500 Marketing Emails', 'Unlimited Pages', '500 GB Storage', 'Unlimited Workspaces', 'SSO & Security (SAML, audit logs)'],
-    color: 'from-emerald-600 to-teal-500',
-    accent: 'emerald',
-    popular: false,
-    seatLimit: 700,
-    storageLimitGB: 500,
-    baseCredits: 50000,
-    projectLimit: -1,
-    clientLimit: 1000,
-    pipelineLimit: -1,
-    bookingsLimit: -1,
-    servicesLimit: -1,
-    onboardingLimit: -1,
-    pagesLimit: -1,
-    invoicesLimit: -1,
-    estimatesLimit: -1,
-    ticketsLimit: -1,
-    marketingEmailsLimit: 500,
-    workspacesLimit: -1
   }
 ];
 
