@@ -76,6 +76,7 @@ import MarketingOmnichannel from './pages/MarketingOmnichannel.tsx';
 import DataMigration from './pages/DataMigration.tsx';
 import { PrivacyPolicy } from './src/pages/PrivacyPolicy.tsx';
 import { CookiePolicy } from './src/pages/CookiePolicy.tsx';
+import { TermsOfService } from './src/pages/TermsOfService.tsx';
 import { AVAILABLE_PLANS } from './constants.tsx';
 import { useActivity } from './hooks/useActivity.ts';
 import { useSystemData } from './hooks/useSystemData.ts';
@@ -587,6 +588,7 @@ const AppContent: React.FC<{ isSidebarOpen: boolean, toggleSidebar: () => void, 
   if (location.pathname.startsWith('/p/')) return <PageView />; // Public Page View
   if (location.pathname === '/privacy-policy') return <PrivacyPolicy />;
   if (location.pathname === '/cookie-policy') return <CookiePolicy />;
+  if (location.pathname === '/terms-of-service') return <TermsOfService />;
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden dark:bg-black dark:text-white transition-colors duration-300">
