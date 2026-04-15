@@ -6,7 +6,7 @@ import {
   Printer, Share2, Lock, Clock, Loader2,
   FileText, ArrowRight, Globe, Check
 } from 'lucide-react';
-import { AVAILABLE_PLANS, ALL_ADDONS, MOCK_PROFILES, MOCK_INVOICES } from '../constants';
+import { AVAILABLE_PLANS, ALL_ADDONS, CREDIT_PACKAGES, MOCK_PROFILES, MOCK_INVOICES } from '../constants';
 import * as ReactRouterDom from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -85,6 +85,12 @@ const UpcomingInvoice: React.FC = () => {
     let pending = null;
     try {
         pending = JSON.parse(localStorage.getItem('agencyos_pending_plan_update') || 'null');
+        if (pending && !pending.dodoProductId) {
+            const plan = AVAILABLE_PLANS.find(p => p.id === pending.id);
+            if (plan) {
+                pending.dodoProductId = pending.cycle === 'annual' ? plan.dodo_product_id_annual : plan.dodo_product_id_monthly;
+            }
+        }
         setPendingPlan(pending);
     } catch { setPendingPlan(null); }
 
@@ -335,18 +341,59 @@ const UpcomingInvoice: React.FC = () => {
     if (itemToPay) {
         // Paying for a specific unbilled charge
         priceId = itemToPay.metadata?.dodoProductId || itemToPay.dodoProductId;
+        
+        // Fallback to constants if missing in metadata
+        if (!priceId) {
+            if (itemToPay.type === 'addon_purchase') {
+                const addon = ALL_ADDONS.find(a => a.id === itemToPay.metadata?.addonId || a.id === itemToPay.addonId);
+                if (addon) {
+                    priceId = itemToPay.metadata?.cycle === 'annual' || itemToPay.cycle === 'annual' 
+                        ? addon.dodo_product_id_annual 
+                        : addon.dodo_product_id_monthly;
+                }
+            } else if (itemToPay.type === 'credit_topup') {
+                const pkg = CREDIT_PACKAGES.find(p => p.credits === itemToPay.metadata?.creditsValue || p.credits === itemToPay.creditsValue);
+                if (pkg) priceId = pkg.dodo_product_id;
+            }
+        }
+
         metadata.type = itemToPay.type;
         metadata.addonId = itemToPay.metadata?.addonId || itemToPay.addonId;
         metadata.cycle = itemToPay.metadata?.cycle || itemToPay.cycle;
         metadata.creditsValue = itemToPay.metadata?.creditsValue || itemToPay.creditsValue;
     } else if (pendingPlan) {
         priceId = pendingPlan.dodoProductId;
+        
+        // Fallback to constants if missing
+        if (!priceId) {
+            const plan = AVAILABLE_PLANS.find(p => p.id === pendingPlan.id);
+            if (plan) {
+                priceId = pendingPlan.cycle === 'annual' ? plan.dodo_product_id_annual : plan.dodo_product_id_monthly;
+            }
+        }
+
         metadata.type = 'plan_upgrade';
         metadata.planId = pendingPlan.id;
         metadata.cycle = pendingPlan.cycle;
     } else if (unbilledCharges.length > 0) {
         const firstCharge = unbilledCharges[0];
         priceId = firstCharge.metadata?.dodoProductId || firstCharge.dodoProductId;
+
+        // Fallback to constants if missing in metadata
+        if (!priceId) {
+            if (firstCharge.type === 'addon_purchase') {
+                const addon = ALL_ADDONS.find(a => a.id === firstCharge.metadata?.addonId || a.id === firstCharge.addonId);
+                if (addon) {
+                    priceId = firstCharge.metadata?.cycle === 'annual' || firstCharge.cycle === 'annual' 
+                        ? addon.dodo_product_id_annual 
+                        : addon.dodo_product_id_monthly;
+                }
+            } else if (firstCharge.type === 'credit_topup') {
+                const pkg = CREDIT_PACKAGES.find(p => p.credits === firstCharge.metadata?.creditsValue || p.credits === firstCharge.creditsValue);
+                if (pkg) priceId = pkg.dodo_product_id;
+            }
+        }
+
         metadata.type = firstCharge.type;
         metadata.addonId = firstCharge.metadata?.addonId || firstCharge.addonId;
         metadata.cycle = firstCharge.metadata?.cycle || firstCharge.cycle;
