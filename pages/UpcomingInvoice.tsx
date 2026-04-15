@@ -16,7 +16,7 @@ const { useNavigate } = ReactRouterDom as any;
 
 // --- ACCESS CONTROL FLAG ---
 // Set this to false to restore access to the page
-const IS_ACCESS_DENIED = true; 
+const IS_ACCESS_DENIED = false; 
 
 const UpcomingInvoice: React.FC = () => {
   const navigate = useNavigate();
@@ -246,12 +246,13 @@ const UpcomingInvoice: React.FC = () => {
           if (pendingPlan) {
                const targetPlan = AVAILABLE_PLANS.find(p => p.id === pendingPlan.id);
                if (targetPlan) {
-                   const rawCost = pendingPlan.cycle === 'annual' ? targetPlan.price * 12 : Math.round(targetPlan.price * 1.2);
+                   const isTrial = pendingPlan.isTrial;
+                   const rawCost = isTrial ? 0 : (pendingPlan.cycle === 'annual' ? targetPlan.price * 12 : Math.round(targetPlan.price * 1.2));
                    
                    // Line 1: New Plan Cost
                    items.push({
-                       name: `Upgrade: ${targetPlan.name} Plan`,
-                       desc: `${pendingPlan.cycle === 'annual' ? 'Annual' : 'Monthly'} Subscription (Starts Now)`,
+                       name: isTrial ? `Trial: ${targetPlan.name} Plan` : `Upgrade: ${targetPlan.name} Plan`,
+                       desc: isTrial ? '14-Day Free Trial (No Credit Card)' : `${pendingPlan.cycle === 'annual' ? 'Annual' : 'Monthly'} Subscription (Starts Now)`,
                        qty: 1,
                        amount: rawCost
                    });
@@ -321,114 +322,136 @@ const UpcomingInvoice: React.FC = () => {
   };
 
   const handlePayNow = () => {
+    if (total <= 0) return;
     setIsProcessing(true);
     
-    setTimeout(async () => {
-        const transactionId = `${invoiceDisplayNum}-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Determine what we are paying for
+    // For now, we handle the most important item (Plan or first Unbilled Charge)
+    let priceId = '';
+    const metadata: any = {
+        workspace_id: workspace?.id,
+        user_id: workspace?.owner_id
+    };
 
-        const newTransaction = {
-            id: transactionId,
-            number: invoiceDisplayNum,
-            client: currentUser.name || 'Agency Admin',
-            clientEmail: currentUser.email,
-            amount: total,
-            date: issueDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-            status: 'Paid',
-            items: lineItems.map(i => i.name).join(', ')
-        };
+    if (pendingPlan) {
+        priceId = pendingPlan.dodoProductId;
+        metadata.type = 'plan_upgrade';
+        metadata.planId = pendingPlan.id;
+        metadata.cycle = pendingPlan.cycle;
+    } else if (unbilledCharges.length > 0) {
+        const firstCharge = unbilledCharges[0];
+        priceId = firstCharge.metadata?.dodoProductId || firstCharge.dodoProductId;
+        metadata.type = firstCharge.type;
+        metadata.addonId = firstCharge.metadata?.addonId || firstCharge.addonId;
+        metadata.cycle = firstCharge.metadata?.cycle || firstCharge.cycle;
+        metadata.creditsValue = firstCharge.metadata?.creditsValue || firstCharge.creditsValue;
+    }
 
-        try {
-            const storedHistory = localStorage.getItem('agencyos_invoices');
-            const existingHistory = storedHistory ? JSON.parse(storedHistory) : MOCK_INVOICES;
-            const updatedHistory = [newTransaction, ...existingHistory];
-            localStorage.setItem('agencyos_invoices', JSON.stringify(updatedHistory));
-        } catch (e) {
-            console.error("Failed to update invoice history", e);
+    if (!priceId) {
+        // Fallback to mock if no Dodo ID is found (for legacy items)
+        setTimeout(async () => {
+            // ... existing mock logic ...
+            await processMockPayment();
+        }, 2000);
+        return;
+    }
+
+    // Build Metadata Query String
+    const metadataStr = Object.entries(metadata)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => `metadata[${k}]=${encodeURIComponent(String(v))}`)
+        .join('&');
+
+    const checkoutUrl = `https://buy.dodopayments.com/${priceId}?client_reference_id=${workspace?.id}&email=${workspace?.owner_email}&${metadataStr}`;
+
+    window.location.href = checkoutUrl;
+  };
+
+  const processMockPayment = async () => {
+    const transactionId = `${invoiceDisplayNum}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newTransaction = {
+        id: transactionId,
+        number: invoiceDisplayNum,
+        client: currentUser.name || 'Agency Admin',
+        clientEmail: currentUser.email,
+        amount: total,
+        date: issueDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: 'Paid',
+        items: lineItems.map(i => i.name).join(', ')
+    };
+
+    try {
+        const storedHistory = localStorage.getItem('agencyos_invoices');
+        const existingHistory = storedHistory ? JSON.parse(storedHistory) : MOCK_INVOICES;
+        const updatedHistory = [newTransaction, ...existingHistory];
+        localStorage.setItem('agencyos_invoices', JSON.stringify(updatedHistory));
+    } catch (e) {
+        console.error("Failed to update invoice history", e);
+    }
+
+    // Apply Plan Update if exists
+    const pending = JSON.parse(localStorage.getItem('agencyos_pending_plan_update') || 'null');
+    
+    let pKey; 
+    
+    if (pending) {
+        // Commit Plan Change
+        const targetPlan = AVAILABLE_PLANS.find(p => p.id === pending.id);
+        const rawCost = targetPlan ? (pending.cycle === 'annual' ? targetPlan.price * 12 : targetPlan.price) : 0;
+        const amountPaid = Math.max(0, rawCost - (pending.credit || 0));
+
+        await updatePlan(pending.id, pending.cycle, amountPaid).catch(console.error);
+
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth();
+        pKey = pending.cycle === 'annual' 
+           ? `agencyos_paid_plan_${year}` 
+           : `agencyos_paid_plan_${year}_${month}`;
+        
+        localStorage.setItem(pKey, 'true');
+        localStorage.removeItem('agencyos_pending_plan_update');
+    } else {
+         const year = issueDate.getFullYear();
+         const month = issueDate.getMonth();
+         pKey = billingCycle === 'annual' ? `agencyos_paid_plan_${year}` : `agencyos_paid_plan_${year}_${month}`;
+         
+         if (!isPlanPaid) {
+             localStorage.setItem(pKey, 'true');
+             await updatePlan(currentPlanId, billingCycle).catch(console.error);
+         }
+    }
+
+    const aKey = `agencyos_paid_addons_${issueDate.getFullYear()}_${issueDate.getMonth()}`;
+    const newlyPaidIds = pendingAddons.map(a => a.id);
+    const updatedPaidIds = [...paidAddonIds, ...newlyPaidIds];
+    
+    const newAddons: { id: string, cycle: 'monthly' | 'annual' }[] = [];
+    unbilledCharges.forEach((c: any) => {
+       if (c.type === 'addon_purchase') {
+           const addonId = c.metadata?.addonId || c.addonId;
+           const cycle = c.metadata?.cycle || c.cycle || 'annual';
+           if (addonId) newAddons.push({ id: addonId, cycle });
+       }
+    });
+
+    if (newAddons.length > 0) {
+        for (const addon of newAddons) {
+            await addAddon(addon.id, 0, addon.cycle).catch(console.error);
         }
+        const currentPaidIds = JSON.parse(localStorage.getItem(aKey) || '[]');
+        const finalPaidIds = Array.from(new Set([...currentPaidIds, ...newAddons.map(a => a.id), ...newlyPaidIds]));
+        localStorage.setItem(aKey, JSON.stringify(finalPaidIds));
+    } else {
+         localStorage.setItem(aKey, JSON.stringify(updatedPaidIds));
+    }
 
-        // Apply Plan Update if exists
-        const pending = JSON.parse(localStorage.getItem('agencyos_pending_plan_update') || 'null');
-        
-        let pKey; 
-        
-        if (pending) {
-            // Commit Plan Change
-            // Calculate amount paid for the plan
-            const targetPlan = AVAILABLE_PLANS.find(p => p.id === pending.id);
-            const rawCost = targetPlan ? (pending.cycle === 'annual' ? targetPlan.price * 12 : targetPlan.price) : 0;
-            const amountPaid = Math.max(0, rawCost - (pending.credit || 0));
-
-            // Update plan in backend
-            await updatePlan(pending.id, pending.cycle, amountPaid).catch(console.error);
-
-            // Mark paid for current cycle
-            const year = new Date().getFullYear();
-            const month = new Date().getMonth();
-            pKey = pending.cycle === 'annual' 
-               ? `agencyos_paid_plan_${year}` 
-               : `agencyos_paid_plan_${year}_${month}`;
-            
-            localStorage.setItem(pKey, 'true');
-            
-            // Clear pending
-            localStorage.removeItem('agencyos_pending_plan_update');
-        } else {
-             // Standard renewal marking logic
-             const year = issueDate.getFullYear();
-             const month = issueDate.getMonth();
-             pKey = billingCycle === 'annual' ? `agencyos_paid_plan_${year}` : `agencyos_paid_plan_${year}_${month}`;
-             
-             if (!isPlanPaid) {
-                 localStorage.setItem(pKey, 'true');
-                 // If standard renewal (not upgrade), reset start date too
-                 await updatePlan(currentPlanId, billingCycle).catch(console.error);
-             }
-        }
-
-        // Handle Addons - Mark monthly cycle as paid
-        const aKey = `agencyos_paid_addons_${issueDate.getFullYear()}_${issueDate.getMonth()}`;
-        const newlyPaidIds = pendingAddons.map(a => a.id);
-        const updatedPaidIds = [...paidAddonIds, ...newlyPaidIds];
-        
-        // Process One-Time Charges (e.g. Addon Purchases)
-        const newAddons: string[] = [];
-        
-        unbilledCharges.forEach((c: any) => {
-           if (c.type === 'addon_purchase' && c.metadata?.addonId) {
-               newAddons.push(c.metadata.addonId);
-           } else if (c.type === 'addon_purchase' && c.addonId) {
-               newAddons.push(c.addonId);
-           }
-        });
-
-        if (newAddons.length > 0) {
-            // Add addons to backend
-            for (const addonId of newAddons) {
-                await addAddon(addonId, 0).catch(console.error);
-            }
-            
-            // Mark new addons as paid for this cycle immediately to avoid double billing
-            const currentPaidIds = JSON.parse(localStorage.getItem(aKey) || '[]');
-            const finalPaidIds = Array.from(new Set([...currentPaidIds, ...newAddons, ...newlyPaidIds]));
-            localStorage.setItem(aKey, JSON.stringify(finalPaidIds));
-        } else {
-             localStorage.setItem(aKey, JSON.stringify(updatedPaidIds));
-        }
-
-        // Call generateInvoice to clear unbilled charges in the backend
-        await generateInvoice(total, lineItems).catch(console.error);
-        
-        // Dispatch Events for Global Sync
-        window.dispatchEvent(new Event('agencyos_config_updated'));
-        window.dispatchEvent(new Event('storage'));
-
-        // Refresh Local State
-        refreshData();
-        
-        setIsProcessing(false);
-        setShowConfetti(true);
-
-    }, 2000);
+    await generateInvoice(total, lineItems).catch(console.error);
+    window.dispatchEvent(new Event('agencyos_config_updated'));
+    window.dispatchEvent(new Event('storage'));
+    refreshData();
+    setIsProcessing(false);
+    setShowConfetti(true);
   };
 
   const handleDownload = async () => {

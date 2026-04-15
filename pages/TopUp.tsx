@@ -20,6 +20,7 @@ const CREDIT_PACKAGES = [
     popular: false, 
     icon: Zap,
     description: 'Essential fuel for quick tasks.',
+    dodo_product_id: 'pdt_0NcjmrypZdduMWG2qNGN8',
     styles: {
       container: "bg-zinc-900/40 border-zinc-800 hover:border-blue-500/50 hover:bg-zinc-900/60",
       iconBox: "bg-zinc-800 text-zinc-400 group-hover:text-blue-400 group-hover:bg-blue-500/10",
@@ -38,6 +39,7 @@ const CREDIT_PACKAGES = [
     save: '20%', 
     icon: Star,
     description: 'Optimal balance for scaling teams.',
+    dodo_product_id: '',
     styles: {
       container: "bg-indigo-900/10 border-indigo-500/20 hover:border-indigo-400/50 hover:bg-indigo-900/20 hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]",
       iconBox: "bg-indigo-500/10 text-indigo-400 group-hover:text-indigo-300 group-hover:bg-indigo-500/20",
@@ -56,6 +58,7 @@ const CREDIT_PACKAGES = [
     save: '30%', 
     icon: Shield,
     description: 'Heavy duty capacity for pros.',
+    dodo_product_id: 'pdt_0Ncjn8Ea3CcgUKzBs8bZI',
     styles: {
       container: "bg-rose-900/10 border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-900/20 hover:shadow-[0_0_30px_-10px_rgba(244,63,94,0.3)]",
       iconBox: "bg-rose-500/10 text-rose-400 group-hover:text-rose-300 group-hover:bg-rose-500/20",
@@ -74,6 +77,7 @@ const CREDIT_PACKAGES = [
     save: '40%', 
     icon: Crown,
     description: 'Maximum throughput architecture.',
+    dodo_product_id: 'pdt_0NcjnFN6TxJZxHkDWJcIk',
     styles: {
       container: "bg-black border-transparent relative overflow-hidden group/rgb ring-1 ring-white/10",
       iconBox: "bg-white/10 text-white backdrop-blur-md",
@@ -120,7 +124,6 @@ const TopUp: React.FC = () => {
     } catch (err) {
         console.error("Top-up Error:", err);
         setIsProcessing(false);
-        // alert removed as per guidelines, using console error or could use a toast if available
     }
   };
 

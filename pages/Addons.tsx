@@ -29,6 +29,7 @@ const Addons: React.FC = () => {
   
   // Modal State
   const [selectedAddon, setSelectedAddon] = useState<any | null>(null);
+  const [modalCycle, setModalCycle] = useState<'monthly' | 'annual'>('annual');
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
@@ -60,35 +61,28 @@ const Addons: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const newCharge = {
-        id: `charge-${Date.now()}`,
-        name: selectedAddon.name,
-        desc: `${selectedAddon.desc} (Annual)`,
-        amount: Number(selectedAddon.price), // Ensure number type
-        type: 'addon_purchase',
-        addonId: selectedAddon.id,
-        date: new Date().toISOString()
-      };
+      const priceId = modalCycle === 'annual' ? selectedAddon.dodo_product_id_annual : selectedAddon.dodo_product_id_monthly;
+      
+      // Add to unbilled charges in backend
+      await addUnbilledCharge({
+          name: selectedAddon.name,
+          amount: modalCycle === 'annual' ? selectedAddon.price : Math.round(selectedAddon.price / 10),
+          type: 'addon_purchase',
+          addonId: selectedAddon.id,
+          cycle: modalCycle,
+          dodoProductId: priceId
+      });
 
-      await addUnbilledCharge(newCharge);
-
-      // Dispatch Events for Global Sync
       window.dispatchEvent(new Event('agencyos_config_updated'));
       window.dispatchEvent(new Event('storage'));
       
       setIsProcessing(false);
-      setPurchaseSuccess(true);
-      
-      // Navigate to upcoming invoice to pay
-      setTimeout(() => {
-        setSelectedAddon(null);
-        setPurchaseSuccess(false);
-        navigate('/upcoming-invoice');
-      }, 1000);
+      setSelectedAddon(null);
+      navigate('/upcoming-invoice');
     } catch (err) {
       console.error("Purchase Error:", err);
       setIsProcessing(false);
-      alert("Failed to initiate purchase. Please try again.");
+      alert("Failed to add addon to invoice. Please try again.");
     }
   };
 
@@ -205,9 +199,9 @@ const Addons: React.FC = () => {
 
                    <div className="relative z-10 pt-6 border-t border-white/5 flex items-center justify-between">
                       <div>
-                         <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Annual</p>
+                         <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Monthly</p>
                          <p className="text-3xl font-black text-white tracking-tight">
-                            ${addon.price}<span className="text-lg text-zinc-600 font-bold">/yr</span>
+                            ${(addon.price / 12).toFixed(0)}<span className="text-lg text-zinc-600 font-bold">/mo</span>
                          </p>
                       </div>
 
@@ -269,6 +263,22 @@ const Addons: React.FC = () => {
 
                     {/* Modal Body */}
                     <div className="p-8 space-y-8">
+                       {/* Cycle Toggle */}
+                       <div className="flex bg-zinc-900 p-1 rounded-2xl border border-white/5">
+                          <button 
+                             onClick={() => setModalCycle('monthly')}
+                             className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${modalCycle === 'monthly' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          >
+                             Monthly
+                          </button>
+                          <button 
+                             onClick={() => setModalCycle('annual')}
+                             className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${modalCycle === 'annual' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          >
+                             Annual
+                          </button>
+                       </div>
+
                        <div className="flex items-center gap-6">
                           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 text-white shadow-lg`}>
                              <selectedAddon.icon size={32} className={`text-zinc-200`} />
@@ -281,8 +291,8 @@ const Addons: React.FC = () => {
 
                        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-white/5 space-y-4">
                           <div className="flex justify-between items-center text-sm">
-                             <span className="text-zinc-400 font-medium">Annual Cost</span>
-                             <span className="text-white font-bold">${selectedAddon.price.toFixed(2)}</span>
+                             <span className="text-zinc-400 font-medium">{modalCycle === 'annual' ? 'Annual' : 'Monthly'} Cost</span>
+                             <span className="text-white font-bold">${modalCycle === 'annual' ? selectedAddon.price.toFixed(2) : (selectedAddon.price / 12).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                              <span className="text-zinc-400 font-medium">Tax (Est.)</span>
@@ -290,8 +300,8 @@ const Addons: React.FC = () => {
                           </div>
                           <div className="h-px bg-white/10 my-2" />
                           <div className="flex justify-between items-center">
-                             <span className="text-sm font-black text-white uppercase tracking-widest">Total Due</span>
-                             <span className="text-2xl font-black text-blue-500">${selectedAddon.price.toFixed(2)}</span>
+                             <span className="text-sm font-black text-white uppercase tracking-widest">Total Due ({modalCycle === 'annual' ? 'Annual' : 'Monthly'})</span>
+                             <span className="text-2xl font-black text-blue-500">${modalCycle === 'annual' ? selectedAddon.price.toFixed(2) : (selectedAddon.price / 12).toFixed(2)}</span>
                           </div>
                        </div>
 
