@@ -61,28 +61,37 @@ const Addons: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const priceId = modalCycle === 'annual' ? selectedAddon.dodo_product_id_annual : selectedAddon.dodo_product_id_monthly;
-      
-      // Add to unbilled charges in backend
-      await addUnbilledCharge({
-          name: selectedAddon.name,
-          amount: modalCycle === 'annual' ? selectedAddon.price : Math.round(selectedAddon.price / 10),
-          type: 'addon_purchase',
-          addonId: selectedAddon.id,
-          cycle: modalCycle,
-          dodoProductId: priceId
-      });
+      const price = modalCycle === 'annual' ? selectedAddon.price : (selectedAddon.price / 12);
+      const newCharge = {
+        id: `charge-${Date.now()}`,
+        name: selectedAddon.name,
+        desc: `${selectedAddon.desc} (${modalCycle === 'annual' ? 'Annual' : 'Monthly'})`,
+        amount: Number(price), 
+        type: 'addon_purchase',
+        addonId: selectedAddon.id,
+        cycle: modalCycle,
+        date: new Date().toISOString()
+      };
 
+      await addUnbilledCharge(newCharge);
+
+      // Dispatch Events for Global Sync
       window.dispatchEvent(new Event('agencyos_config_updated'));
       window.dispatchEvent(new Event('storage'));
       
       setIsProcessing(false);
-      setSelectedAddon(null);
-      navigate('/upcoming-invoice');
+      setPurchaseSuccess(true);
+      
+      // Navigate to upcoming invoice to pay
+      setTimeout(() => {
+        setSelectedAddon(null);
+        setPurchaseSuccess(false);
+        navigate('/upcoming-invoice');
+      }, 1000);
     } catch (err) {
       console.error("Purchase Error:", err);
       setIsProcessing(false);
-      alert("Failed to add addon to invoice. Please try again.");
+      alert("Failed to initiate purchase. Please try again.");
     }
   };
 

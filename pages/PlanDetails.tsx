@@ -107,8 +107,6 @@ const PlanDetails: React.FC = () => {
   
   const isCurrent = plan?.id === currentPlanId;
   let isDowngrade = false;
-  const isTrialEligible = plan?.hasTrial && !workspace?.has_used_trial && currentPlanId === 'free';
-
   let buttonText = `Select ${plan?.name} Plan`;
 
   if (isCurrent && billingCycle === currentCycle) {
@@ -119,8 +117,6 @@ const PlanDetails: React.FC = () => {
   } else if (currentCycle === 'annual' && billingCycle === 'monthly') {
       buttonText = "Unavailable (Annual Active)";
       isDowngrade = true;
-  } else if (isTrialEligible) {
-      buttonText = "Start 14-Day Free Trial";
   } else if (isCurrent) {
       buttonText = "Update Cycle";
   }
@@ -134,10 +130,8 @@ const PlanDetails: React.FC = () => {
     const pendingUpdate = {
       id: plan.id,
       cycle: billingCycle,
-      price: isTrialEligible ? 0 : price,
-      credit: credit,
-      isTrial: isTrialEligible,
-      dodoProductId: billingCycle === 'annual' ? plan.dodo_product_id_annual : plan.dodo_product_id_monthly
+      price: price,
+      credit: credit
     };
     
     localStorage.setItem('agencyos_pending_plan_update', JSON.stringify(pendingUpdate));
@@ -196,11 +190,6 @@ const PlanDetails: React.FC = () => {
                   </h1>
                   {plan.popular && (
                     <span className="px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">Popular</span>
-                  )}
-                  {plan.hasTrial && !workspace?.has_used_trial && currentPlanId === 'free' && (
-                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20 flex items-center gap-1.5">
-                      <Sparkles size={10} /> 14-Day Free Trial
-                    </span>
                   )}
                 </div>
                 <p className="text-xl text-zinc-400 font-medium">{plan.desc}</p>
