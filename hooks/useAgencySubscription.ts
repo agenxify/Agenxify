@@ -74,7 +74,7 @@ export const useAgencySubscription = () => {
              supabase.from('subscriptions').select('*').eq('owner_id', user.uid).maybeSingle(),
              supabase.from('payment_methods').select('*').eq('owner_id', user.uid),
              supabase.from('billing_history').select('*').eq('owner_id', user.uid).order('date_issued', { ascending: false }),
-             supabase.from('purchased_addons').select('addon_id, created_at').eq('owner_id', user.uid).eq('status', 'active'),
+             supabase.from('purchased_addons').select('addon_id, created_at, expires_at').eq('owner_id', user.uid).eq('status', 'active'),
              supabase.from('unbilled_charges').select('*').eq('owner_id', user.uid),
              supabase.from('topup_credits').select('*').eq('owner_id', user.uid).order('created_at', { ascending: false })
           ]);
@@ -123,10 +123,13 @@ export const useAgencySubscription = () => {
              items: inv.line_items ? inv.line_items.map((i: any) => i.name).join(', ') : 'Service Charge'
           }));
           setBillingHistory(mappedHistory);
-          const activeAddons = (addonsRes.data || []).map((a: any) => ({
-            id: a.addon_id,
-            created_at: a.created_at
-          }));
+          const now = new Date();
+          const activeAddons = (addonsRes.data || [])
+            .filter((a: any) => !a.expires_at || new Date(a.expires_at) > now)
+            .map((a: any) => ({
+              id: a.addon_id,
+              created_at: a.created_at
+            }));
           setAddons(activeAddons);
           setUnbilledCharges(unbilledRes.data || []);
           setTopupCredits(topupRes.data || []);
@@ -235,7 +238,7 @@ export const useAgencySubscription = () => {
       await fetchData();
   };
 
-  const addCredits = async (amount: number, cost: number) => {
+  const addCredits = async (amount: number, cost: number, dodoProductId?: string) => {
       if (!user) return;
       
       // 1. Add record to unbilled charges
@@ -245,7 +248,7 @@ export const useAgencySubscription = () => {
           description: `${amount} Credits Top-up`,
           amount: cost,
           type: 'credit_topup',
-          metadata: { creditsValue: amount }
+          metadata: { creditsValue: amount, dodoProductId }
       });
 
       if (unbilledError) throw unbilledError;
@@ -308,13 +311,23 @@ export const useAgencySubscription = () => {
       return () => window.removeEventListener('agencyos_credits_updated', fetchData);
   }, [fetchData]);
 
-  const addAddon = async (addonId: string, price: number) => {
+  const addAddon = async (addonId: string, price: number, cycle: 'monthly' | 'annual' = 'annual') => {
       if (!workspace) return;
+      
+      const expiresAt = new Date();
+      if (cycle === 'annual') {
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+          expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
+
       const { error } = await supabase.from('purchased_addons').insert({
           workspace_id: workspace.id,
           owner_id: user.uid,
           addon_id: addonId,
-          status: 'active'
+          status: 'active',
+          billing_cycle: cycle,
+          expires_at: expiresAt.toISOString()
       });
       
       if (error) throw error;
