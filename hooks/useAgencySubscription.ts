@@ -238,7 +238,7 @@ export const useAgencySubscription = () => {
       await fetchData();
   };
 
-  const addCredits = async (amount: number, cost: number, dodoProductId?: string) => {
+  const addCredits = async (amount: number, cost: number) => {
       if (!user) return;
       
       // 1. Add record to unbilled charges
@@ -248,7 +248,7 @@ export const useAgencySubscription = () => {
           description: `${amount} Credits Top-up`,
           amount: cost,
           type: 'credit_topup',
-          metadata: { creditsValue: amount, dodoProductId }
+          metadata: { creditsValue: amount }
       });
 
       if (unbilledError) throw unbilledError;
