@@ -414,3 +414,81 @@ export const ALL_ADDONS = [
     dodo_product_id_annual: 'pdt_0Ncjsq1Q6qkicW7JjwsLp'
   },
 ];
+
+export const CREDIT_PACKAGES = [
+  { 
+    id: 'small', 
+    credits: 500, 
+    price: 5, 
+    label: 'Starter Boost', 
+    popular: false, 
+    icon: Zap,
+    description: 'Essential fuel for quick tasks.',
+    dodo_product_id: 'pdt_0NcjmrypZdduMWG2qNGN8',
+    styles: {
+      container: "bg-zinc-900/40 border-zinc-800 hover:border-blue-500/50 hover:bg-zinc-900/60",
+      iconBox: "bg-zinc-800 text-zinc-400 group-hover:text-blue-400 group-hover:bg-blue-500/10",
+      text: "text-zinc-400 group-hover:text-zinc-200",
+      price: "text-white",
+      badge: null,
+      button: "bg-zinc-800 text-zinc-400 group-hover:bg-blue-600 group-hover:text-white"
+    }
+  },
+  { 
+    id: 'medium', 
+    credits: 1500, 
+    price: 12, 
+    label: 'Growth Pack', 
+    popular: true, 
+    save: '20%', 
+    icon: Star,
+    description: 'Optimal balance for scaling teams.',
+    dodo_product_id: 'pdt_PLACEHOLDER_MEDIUM_CREDITS', // TODO: Replace with actual Dodo Product ID
+    styles: {
+      container: "bg-indigo-900/10 border-indigo-500/20 hover:border-indigo-400/50 hover:bg-indigo-900/20 hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]",
+      iconBox: "bg-indigo-500/10 text-indigo-400 group-hover:text-indigo-300 group-hover:bg-indigo-500/20",
+      text: "text-indigo-200/60 group-hover:text-indigo-100",
+      price: "text-indigo-100",
+      badge: "bg-indigo-500 text-white",
+      button: "bg-indigo-600 text-white hover:bg-indigo-500"
+    }
+  },
+  { 
+    id: 'large', 
+    credits: 5000, 
+    price: 35, 
+    label: 'Power User', 
+    popular: false, 
+    save: '30%', 
+    icon: Shield,
+    description: 'Heavy duty capacity for pros.',
+    dodo_product_id: 'pdt_0Ncjn8Ea3CcgUKzBs8bZI',
+    styles: {
+      container: "bg-rose-900/10 border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-900/20 hover:shadow-[0_0_30px_-10px_rgba(244,63,94,0.3)]",
+      iconBox: "bg-rose-500/10 text-rose-400 group-hover:text-rose-300 group-hover:bg-rose-500/20",
+      text: "text-rose-200/60 group-hover:text-rose-100",
+      price: "text-rose-100",
+      badge: "bg-rose-500 text-white",
+      button: "bg-rose-600 text-white hover:bg-rose-500"
+    }
+  },
+  { 
+    id: 'enterprise', 
+    credits: 20000, 
+    price: 120, 
+    label: 'Agency Scale', 
+    popular: false, 
+    save: '40%', 
+    icon: Crown,
+    description: 'Maximum throughput architecture.',
+    dodo_product_id: 'pdt_0NcjnFN6TxJZxHkDWJcIk',
+    styles: {
+      container: "bg-black border-transparent relative overflow-hidden group/rgb ring-1 ring-white/10",
+      iconBox: "bg-white/10 text-white backdrop-blur-md",
+      text: "text-zinc-400 group-hover:text-white",
+      price: "text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-teal-400",
+      badge: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white box-shadow-lg",
+      button: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:brightness-110"
+    }
+  },
+];
