@@ -322,7 +322,7 @@ const UpcomingInvoice: React.FC = () => {
   };
 
   const handlePayNow = () => {
-    if (total <= 0) return;
+    if (total <= 0 && !pendingPlan?.isTrial) return;
     setIsProcessing(true);
     
     // Determine what we are paying for
@@ -362,7 +362,7 @@ const UpcomingInvoice: React.FC = () => {
         .map(([k, v]) => `metadata[${k}]=${encodeURIComponent(String(v))}`)
         .join('&');
 
-    const checkoutUrl = `https://buy.dodopayments.com/${priceId}?client_reference_id=${workspace?.id}&email=${workspace?.owner_email}&${metadataStr}`;
+    const checkoutUrl = `https://checkout.dodopayments.com/buy/${priceId}?client_reference_id=${workspace?.id}&customer_email=${workspace?.owner_email}&${metadataStr}`;
 
     window.location.href = checkoutUrl;
   };
