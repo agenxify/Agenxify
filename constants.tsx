@@ -256,7 +256,9 @@ export const AVAILABLE_PLANS = [
     estimatesLimit: 10,
     ticketsLimit: 30,
     marketingEmailsLimit: 0,
-    workspacesLimit: 1
+    workspacesLimit: 1,
+    dodo_product_id_monthly: '',
+    dodo_product_id_annual: ''
   },
   {
     id: 'starter',
@@ -281,7 +283,10 @@ export const AVAILABLE_PLANS = [
     estimatesLimit: -1,
     ticketsLimit: 150,
     marketingEmailsLimit: 20,
-    workspacesLimit: 3
+    workspacesLimit: 3,
+    dodo_product_id_monthly: 'pdt_0NcjlDGv0howghtyebR0V',
+    dodo_product_id_annual: 'pdt_0NcjlScp8xeibMJeb43mp',
+    hasTrial: true
   },
   {
     id: 'growth',
@@ -306,7 +311,10 @@ export const AVAILABLE_PLANS = [
     estimatesLimit: -1,
     ticketsLimit: 150,
     marketingEmailsLimit: 50,
-    workspacesLimit: 5
+    workspacesLimit: 5,
+    dodo_product_id_monthly: 'pdt_0Ncjlvdr7KlHMqQJl41DA',
+    dodo_product_id_annual: 'pdt_0NcjmCWLCA97zfwYn6Qgb',
+    hasTrial: true
   },
   {
     id: 'enterprise',
@@ -331,7 +339,10 @@ export const AVAILABLE_PLANS = [
     estimatesLimit: -1,
     ticketsLimit: 1000,
     marketingEmailsLimit: 150,
-    workspacesLimit: 15
+    workspacesLimit: 15,
+    dodo_product_id_monthly: 'pdt_0NcjmJjLenmHHJG7H0YkK',
+    dodo_product_id_annual: 'pdt_0NcjmR4CeG864aMeV418J',
+    hasTrial: true
   }
 ];
 
@@ -343,7 +354,9 @@ export const ALL_ADDONS = [
     price: 2400, 
     icon: Sparkles, 
     theme: 'purple',
-    gradient: 'from-purple-600 to-pink-600'
+    gradient: 'from-purple-600 to-pink-600',
+    dodo_product_id_monthly: 'pdt_0Ncjrbw45Aoqr1ysqBPLv',
+    dodo_product_id_annual: 'pdt_0NcjrmMc7r8WGJSGhJ7Q7'
   },
   { 
     id: 'storage_1tb', 
@@ -352,7 +365,9 @@ export const ALL_ADDONS = [
     price: 2040, 
     icon: Database, 
     theme: 'blue',
-    gradient: 'from-blue-600 to-cyan-600'
+    gradient: 'from-blue-600 to-cyan-600',
+    dodo_product_id_monthly: 'pdt_0NcjrxmgXAs6BhPY1XuIO',
+    dodo_product_id_annual: 'pdt_0Ncjs3K3iE2nE2eEHqw40'
   },
   { 
     id: 'extra_workspaces', 
@@ -361,7 +376,9 @@ export const ALL_ADDONS = [
     price: 360, 
     icon: Globe, 
     theme: 'indigo',
-    gradient: 'from-indigo-500 to-violet-500'
+    gradient: 'from-indigo-500 to-violet-500',
+    dodo_product_id_monthly: 'pdt_0NcjsE2U1toy8aj7kDwqq',
+    dodo_product_id_annual: 'pdt_0NcjsHMR0J8536Qm75NpZ'
   },
   { 
     id: 'extra_seats', 
@@ -370,7 +387,9 @@ export const ALL_ADDONS = [
     price: 300, 
     icon: UserPlus, 
     theme: 'emerald',
-    gradient: 'from-emerald-500 to-teal-500'
+    gradient: 'from-emerald-500 to-teal-500',
+    dodo_product_id_monthly: 'pdt_0NcjsMeKiIM6noJNlcvVP',
+    dodo_product_id_annual: 'pdt_0NcjsPEAzaXvYTsVc4F2m'
   },
   { 
     id: 'email_broadcasting', 
@@ -379,7 +398,9 @@ export const ALL_ADDONS = [
     price: 480, 
     icon: Target, 
     theme: 'rose',
-    gradient: 'from-rose-500 to-orange-500'
+    gradient: 'from-rose-500 to-orange-500',
+    dodo_product_id_monthly: 'pdt_0NcjsWvnunOMVMCgP8XbQ',
+    dodo_product_id_annual: 'pdt_0Ncjsby57kdhTrzr5Gu8T'
   },
   { 
     id: 'ai_automation_access', 
@@ -388,6 +409,8 @@ export const ALL_ADDONS = [
     price: 600, 
     icon: Workflow, 
     theme: 'amber',
-    gradient: 'from-amber-500 to-yellow-500'
+    gradient: 'from-amber-500 to-yellow-500',
+    dodo_product_id_monthly: 'pdt_0NcjsmoXJMvUTZyibKZFx',
+    dodo_product_id_annual: 'pdt_0Ncjsq1Q6qkicW7JjwsLp'
   },
 ];
