@@ -321,19 +321,25 @@ const UpcomingInvoice: React.FC = () => {
     refreshData();
   };
 
-  const handlePayNow = () => {
-    if (total <= 0 && !pendingPlan?.isTrial) return;
+  const handlePayNow = (itemToPay?: any) => {
+    if (total <= 0 && !pendingPlan?.isTrial && !itemToPay) return;
     setIsProcessing(true);
     
     // Determine what we are paying for
-    // For now, we handle the most important item (Plan or first Unbilled Charge)
     let priceId = '';
     const metadata: any = {
         workspace_id: workspace?.id,
         user_id: workspace?.owner_id
     };
 
-    if (pendingPlan) {
+    if (itemToPay) {
+        // Paying for a specific unbilled charge
+        priceId = itemToPay.metadata?.dodoProductId || itemToPay.dodoProductId;
+        metadata.type = itemToPay.type;
+        metadata.addonId = itemToPay.metadata?.addonId || itemToPay.addonId;
+        metadata.cycle = itemToPay.metadata?.cycle || itemToPay.cycle;
+        metadata.creditsValue = itemToPay.metadata?.creditsValue || itemToPay.creditsValue;
+    } else if (pendingPlan) {
         priceId = pendingPlan.dodoProductId;
         metadata.type = 'plan_upgrade';
         metadata.planId = pendingPlan.id;
@@ -359,8 +365,8 @@ const UpcomingInvoice: React.FC = () => {
         .map(([k, v]) => `metadata[${k}]=${encodeURIComponent(String(v))}`)
         .join('&');
 
-    // Standard Dodo Payments Buy Button URL
-    const checkoutUrl = `https://buy.dodopayments.com/${priceId}?client_reference_id=${workspace?.id}&email=${workspace?.owner_email}&${metadataStr}`;
+    // Standard Dodo Payments Buy Button URL with quantity=1
+    const checkoutUrl = `https://checkout.dodopayments.com/buy/${priceId}?quantity=1&client_reference_id=${workspace?.id}&email=${workspace?.owner_email}&${metadataStr}`;
 
     window.location.href = checkoutUrl;
   };
@@ -664,8 +670,27 @@ const UpcomingInvoice: React.FC = () => {
                                      <p className="text-xs text-slate-500 mt-1 font-medium">{item.desc}</p>
                                   </td>
                                   <td className="py-6 text-center font-bold text-slate-600 text-sm">{item.qty}</td>
-                                  <td className={`py-6 text-right font-bold text-sm ${item.amount < 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                      {item.amount < 0 ? `-$${Math.abs(item.amount).toFixed(2)}` : `$${item.amount.toFixed(2)}`}
+                                  <td className="py-6 text-right">
+                                     <div className="flex flex-col items-end gap-1">
+                                        <span className={`font-bold text-sm ${item.amount < 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                            {item.amount < 0 ? `-$${Math.abs(item.amount).toFixed(2)}` : `$${item.amount.toFixed(2)}`}
+                                        </span>
+                                        {item.amount > 0 && !isEverythingPaid && (
+                                           <button 
+                                              onClick={() => {
+                                                 if (item.name.includes('Upgrade') || item.name.includes('Trial')) {
+                                                    handlePayNow();
+                                                 } else {
+                                                    const charge = unbilledCharges.find(c => (c.name || c.description || c.metadata?.name) === item.name);
+                                                    if (charge) handlePayNow(charge);
+                                                 }
+                                              }}
+                                              className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors flex items-center gap-1 no-print"
+                                           >
+                                              Pay Now <CreditCard size={10} />
+                                           </button>
+                                        )}
+                                     </div>
                                   </td>
                                </tr>
                             ))}
