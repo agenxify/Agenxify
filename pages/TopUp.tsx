@@ -39,7 +39,7 @@ const CREDIT_PACKAGES = [
     save: '20%', 
     icon: Star,
     description: 'Optimal balance for scaling teams.',
-    dodo_product_id: '',
+    dodo_product_id: 'pdt_PLACEHOLDER_MEDIUM_CREDITS', // TODO: Replace with actual Dodo Product ID
     styles: {
       container: "bg-indigo-900/10 border-indigo-500/20 hover:border-indigo-400/50 hover:bg-indigo-900/20 hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]",
       iconBox: "bg-indigo-500/10 text-indigo-400 group-hover:text-indigo-300 group-hover:bg-indigo-500/20",
@@ -114,7 +114,7 @@ const TopUp: React.FC = () => {
     setIsProcessing(true);
     
     try {
-        await addCredits(selectedPkg.credits, selectedPkg.price);
+        await addCredits(selectedPkg.credits, selectedPkg.price, selectedPkg.dodo_product_id);
         
         window.dispatchEvent(new Event('agencyos_config_updated'));
         window.dispatchEvent(new Event('storage'));

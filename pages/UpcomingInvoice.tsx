@@ -348,11 +348,8 @@ const UpcomingInvoice: React.FC = () => {
     }
 
     if (!priceId) {
-        // Fallback to mock if no Dodo ID is found (for legacy items)
-        setTimeout(async () => {
-            // ... existing mock logic ...
-            await processMockPayment();
-        }, 2000);
+        setIsProcessing(false);
+        alert("Missing Product ID for this item. Please ensure Dodo Product IDs are configured in the dashboard and constants.");
         return;
     }
 
@@ -362,7 +359,8 @@ const UpcomingInvoice: React.FC = () => {
         .map(([k, v]) => `metadata[${k}]=${encodeURIComponent(String(v))}`)
         .join('&');
 
-    const checkoutUrl = `https://checkout.dodopayments.com/buy/${priceId}?client_reference_id=${workspace?.id}&customer_email=${workspace?.owner_email}&${metadataStr}`;
+    // Standard Dodo Payments Buy Button URL
+    const checkoutUrl = `https://buy.dodopayments.com/${priceId}?client_reference_id=${workspace?.id}&email=${workspace?.owner_email}&${metadataStr}`;
 
     window.location.href = checkoutUrl;
   };
