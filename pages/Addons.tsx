@@ -22,9 +22,13 @@ const PLAN_INCLUSIONS: Record<string, string[]> = {
   'enterprise_plus': []
 };
 
+import { DODO_ADDONS } from '../src/constants/dodo';
+import axios from 'axios';
+
 const Addons: React.FC = () => {
   const navigate = useNavigate();
   const { workspace, subscription, addons: purchasedAddons, addUnbilledCharge, loading } = useAgencySubscription();
+  const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal State
@@ -47,9 +51,6 @@ const Addons: React.FC = () => {
     }
   }, [subscription, workspace]);
 
-  // Use Auth Context for user data
-  const { user: currentUser } = useAuth();
-
   const initiatePurchase = (addon: any) => {
     if (loading || !workspace) return;
     setPurchaseSuccess(false);
@@ -57,41 +58,49 @@ const Addons: React.FC = () => {
   };
 
   const confirmPurchase = async () => {
-    if (!selectedAddon || !workspace) return;
+    if (!selectedAddon || !workspace || isProcessing) return;
     setIsProcessing(true);
 
     try {
-      const price = modalCycle === 'annual' ? selectedAddon.price : (selectedAddon.price / 12);
-      const newCharge = {
-        id: `charge-${Date.now()}`,
-        name: selectedAddon.name,
-        desc: `${selectedAddon.desc} (${modalCycle === 'annual' ? 'Annual' : 'Monthly'})`,
-        amount: Number(price), 
-        type: 'addon_purchase',
-        addonId: selectedAddon.id,
-        cycle: modalCycle,
-        date: new Date().toISOString()
-      };
+      let productId = '';
+      if (selectedAddon.id === 'ai_pro') {
+        productId = DODO_ADDONS.AI_GENERATOR_PRO.MONTHLY;
+      } else if (selectedAddon.id === 'storage_1tb') {
+        productId = modalCycle === 'annual' ? DODO_ADDONS.CLOUD_STORAGE.ANNUALLY : DODO_ADDONS.CLOUD_STORAGE.MONTHLY;
+      } else if (selectedAddon.id === 'extra_workspaces') {
+        productId = modalCycle === 'annual' ? DODO_ADDONS.EXTRA_WORKSPACE.ANNUALLY : DODO_ADDONS.EXTRA_WORKSPACE.MONTHLY;
+      } else if (selectedAddon.id === 'extra_seats') {
+        productId = modalCycle === 'annual' ? DODO_ADDONS.EXTRA_SEATS.ANNUALLY : DODO_ADDONS.EXTRA_SEATS.MONTHLY;
+      } else if (selectedAddon.id === 'email_broadcasting') {
+        productId = modalCycle === 'annual' ? DODO_ADDONS.EMAIL_BROADCASTING.ANNUALLY : DODO_ADDONS.EMAIL_BROADCASTING.MONTHLY;
+      } else if (selectedAddon.id === 'ai_automation_access') {
+        productId = modalCycle === 'annual' ? DODO_ADDONS.AI_AUTOMATION.ANNUALLY : DODO_ADDONS.AI_AUTOMATION.MONTHLY;
+      }
 
-      await addUnbilledCharge(newCharge);
+      if (!productId) throw new Error("Invalid addon selection");
 
-      // Dispatch Events for Global Sync
-      window.dispatchEvent(new Event('agencyos_config_updated'));
-      window.dispatchEvent(new Event('storage'));
-      
-      setIsProcessing(false);
-      setPurchaseSuccess(true);
-      
-      // Navigate to upcoming invoice to pay
-      setTimeout(() => {
-        setSelectedAddon(null);
-        setPurchaseSuccess(false);
-        navigate('/upcoming-invoice');
-      }, 1000);
+      const response = await axios.post('/api/billing/create-checkout-session', {
+        productId,
+        userId: currentUser?.uid,
+        email: currentUser?.email,
+        workspaceId: workspace?.id,
+        metadata: {
+          purchaseType: 'addon',
+          addonId: selectedAddon.id,
+          cycle: modalCycle
+        }
+      });
+
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
     } catch (err) {
       console.error("Purchase Error:", err);
-      setIsProcessing(false);
       alert("Failed to initiate purchase. Please try again.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 

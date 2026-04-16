@@ -9,11 +9,17 @@ import { AVAILABLE_PLANS } from '../constants';
 import { motion } from 'framer-motion';
 import { useAgencySubscription } from '../hooks/useAgencySubscription';
 
+import { DODO_PLANS } from '../src/constants/dodo';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
 const PlanDetails: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const { workspace, subscription } = useAgencySubscription();
+  const { user } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const plan = AVAILABLE_PLANS.find(p => p.id === planId);
 
@@ -121,27 +127,49 @@ const PlanDetails: React.FC = () => {
       buttonText = "Update Cycle";
   }
 
-  const handleSelectPlan = () => {
-    if (!plan || isDowngrade || (isCurrent && billingCycle === currentCycle)) return;
+  const handleSelectPlan = async () => {
+    if (!plan || isDowngrade || (isCurrent && billingCycle === currentCycle) || isRedirecting) return;
     
-    const credit = calculateCredit();
-    
-    // Set pending plan update in local storage
-    const pendingUpdate = {
-      id: plan.id,
-      cycle: billingCycle,
-      price: price,
-      credit: credit
-    };
-    
-    localStorage.setItem('agencyos_pending_plan_update', JSON.stringify(pendingUpdate));
-    
-    // Dispatch event to notify other components
-    window.dispatchEvent(new Event('agencyos_config_updated'));
-    window.dispatchEvent(new Event('storage'));
-    
-    // Navigate to upcoming invoice
-    navigate('/upcoming-invoice');
+    setIsRedirecting(true);
+    try {
+      // Get the correct Dodo Product ID based on plan and cycle
+      let productId = '';
+      if (planId === 'starter') {
+        productId = billingCycle === 'annual' ? DODO_PLANS.STARTER.ANNUALLY : DODO_PLANS.STARTER.MONTHLY;
+      } else if (planId === 'growth') {
+        productId = billingCycle === 'annual' ? DODO_PLANS.GROWTH.ANNUALLY : DODO_PLANS.GROWTH.MONTHLY;
+      } else if (planId === 'enterprise') {
+        productId = billingCycle === 'annual' ? DODO_PLANS.ENTERPRISE.ANNUALLY : DODO_PLANS.ENTERPRISE.MONTHLY;
+      }
+
+      if (!productId) {
+        throw new Error("Invalid plan selection");
+      }
+
+      // Create checkout session via backend
+      const response = await axios.post('/api/billing/create-checkout-session', {
+        productId,
+        userId: user?.uid,
+        email: user?.email,
+        workspaceId: workspace?.id,
+        metadata: {
+          purchaseType: 'subscription',
+          planId: planId,
+          billingCycle: billingCycle
+        }
+      });
+
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
+    } catch (error) {
+      console.error("Checkout Redirect Error:", error);
+      alert("Failed to start checkout. Please try again.");
+    } finally {
+      setIsRedirecting(false);
+    }
   };
 
   return (
@@ -435,18 +463,26 @@ const PlanDetails: React.FC = () => {
           </motion.div>
 
           {/* Action Area */}
-          <motion.div variants={itemVariants} className="flex justify-center">
+          <motion.div variants={itemVariants} className="flex justify-center flex-col items-center gap-4">
             <button 
               onClick={handleSelectPlan}
-              disabled={isDowngrade || (isCurrent && billingCycle === currentCycle)}
-              className={`px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl ${
-                isDowngrade || (isCurrent && billingCycle === currentCycle) 
+              disabled={isDowngrade || (isCurrent && billingCycle === currentCycle) || isRedirecting}
+              className={`px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl flex items-center gap-3 ${
+                isDowngrade || (isCurrent && billingCycle === currentCycle) || isRedirecting
                   ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50' 
                   : `hover:scale-105 active:scale-95 bg-gradient-to-r ${plan.color} text-white`
               }`}
             >
-              {buttonText}
+              {isRedirecting ? (
+                <>
+                  <Activity size={18} className="animate-pulse" />
+                  Redirecting...
+                </>
+              ) : buttonText}
             </button>
+            {isRedirecting && (
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">Launching Secure Payment Portal...</p>
+            )}
           </motion.div>
         </motion.div>
       </div>

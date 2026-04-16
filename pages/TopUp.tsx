@@ -85,9 +85,14 @@ const CREDIT_PACKAGES = [
   },
 ];
 
+import { DODO_CREDITS } from '../src/constants/dodo';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
 const TopUp: React.FC = () => {
   const navigate = useNavigate();
   const { workspace, subscription, addons, addCredits, totalCredits, loading } = useAgencySubscription();
+  const { user } = useAuth();
   const currentPlanId = subscription?.plan_id || workspace?.plan_id || 'free';
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>('medium');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -106,21 +111,39 @@ const TopUp: React.FC = () => {
   const currentBalance = totalCredits;
 
   const handlePurchase = async () => {
-    if (!selectedPkg || !workspace) return;
+    if (!selectedPkg || !workspace || isProcessing) return;
     setIsProcessing(true);
     
     try {
-        await addCredits(selectedPkg.credits, selectedPkg.price);
-        
-        window.dispatchEvent(new Event('agencyos_config_updated'));
-        window.dispatchEvent(new Event('storage'));
-        
-        setIsProcessing(false);
-        navigate('/upcoming-invoice');
+        let productId = '';
+        if (selectedPackageId === 'small') productId = DODO_CREDITS.STARTER_BOOST;
+        else if (selectedPackageId === 'medium') productId = DODO_CREDITS.GROWTH_PACK;
+        else if (selectedPackageId === 'large') productId = DODO_CREDITS.POWER_USER;
+        else if (selectedPackageId === 'enterprise') productId = DODO_CREDITS.AGENCY_SCALE;
+
+        if (!productId) throw new Error("Invalid package selected");
+
+        const response = await axios.post('/api/billing/create-checkout-session', {
+            productId,
+            userId: user?.uid,
+            email: user?.email,
+            workspaceId: workspace?.id,
+            metadata: {
+                purchaseType: 'credits',
+                packageId: selectedPackageId
+            }
+        });
+
+        if (response.data.url) {
+            window.location.href = response.data.url;
+        } else {
+            throw new Error("No checkout URL received");
+        }
     } catch (err) {
         console.error("Top-up Error:", err);
+        alert("Failed to initiate payment. Please try again.");
+    } finally {
         setIsProcessing(false);
-        // alert removed as per guidelines, using console error or could use a toast if available
     }
   };
 
