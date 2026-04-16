@@ -139,9 +139,10 @@ const TopUp: React.FC = () => {
         } else {
             throw new Error("No checkout URL received");
         }
-    } catch (err) {
+    } catch (err: any) {
         console.error("Top-up Error:", err);
-        alert("Failed to initiate payment. Please try again.");
+        const errorMessage = err.response?.data?.error || err.message || "Unknown error";
+        alert(`Failed to initiate payment: ${errorMessage}. Please try again.`);
     } finally {
         setIsProcessing(false);
     }

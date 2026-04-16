@@ -164,9 +164,10 @@ const PlanDetails: React.FC = () => {
       } else {
         throw new Error("No checkout URL received");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout Redirect Error:", error);
-      alert("Failed to start checkout. Please try again.");
+      const errorMessage = error.response?.data?.error || error.message || "Unknown error";
+      alert(`Failed to start checkout: ${errorMessage}. Please try again.`);
     } finally {
       setIsRedirecting(false);
     }
