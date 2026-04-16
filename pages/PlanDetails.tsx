@@ -153,6 +153,8 @@ const PlanDetails: React.FC = () => {
         email: user?.email,
         workspaceId: workspace?.id,
         metadata: {
+          userId: user?.uid, // Redundant but safer
+          workspaceId: workspace?.id,
           purchaseType: 'subscription',
           planId: planId,
           billingCycle: billingCycle
