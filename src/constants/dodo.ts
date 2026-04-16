@@ -50,10 +50,10 @@ export const DODO_CREDITS = {
 
 // Map credit product IDs to credit amounts
 export const CREDIT_AMOUNTS: Record<string, number> = {
-  'pdt_0NcplIaIzEFtvIBsrPuSm': 5000,   // Starter Boost (Assumption, need to check or set sensible defaults)
-  'pdt_0NcplPOW4ftUAFciHSZ7G': 20000,  // Growth Pack
-  'pdt_0NcplZqPBlqEFWxFPjlyf': 50000,  // Power User
-  'pdt_0NckvHhyg5xsRY3Bsz67A': 150000  // Agency Scale
+  'pdt_0NcplIaIzEFtvIBsrPuSm': 500,      // Starter Boost
+  'pdt_0NcplPOW4ftUAFciHSZ7G': 1500,     // Growth Pack
+  'pdt_0NcplZqPBlqEFWxFPjlyf': 5000,     // Power User
+  'pdt_0NckvHhyg5xsRY3Bsz67A': 20000     // Agency Scale
 };
 
 // Map Plan IDs to Plan Details

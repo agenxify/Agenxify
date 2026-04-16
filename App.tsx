@@ -24,6 +24,7 @@ import Clients from './pages/Clients.tsx';
 import Team from './pages/Team.tsx';
 import Billing from './pages/Billing.tsx';
 import InvoiceEditor from './pages/InvoiceEditor.tsx';
+import BillingSuccess from './pages/BillingSuccess.tsx';
 import PersonalBilling from './pages/PersonalBilling.tsx';
 import UpcomingInvoice from './pages/UpcomingInvoice.tsx';
 import Plans from './pages/Plans.tsx';
@@ -870,6 +871,7 @@ const AppContent: React.FC<{ isSidebarOpen: boolean, toggleSidebar: () => void, 
               <Route path="/billing/topup" element={<ProtectedRoute moduleId="billing"><TopUp /></ProtectedRoute>} />
               <Route path="/billing/payment-methods" element={<ProtectedRoute moduleId="billing"><PaymentMethods /></ProtectedRoute>} />
               <Route path="/billing/addons" element={<ProtectedRoute moduleId="billing"><Addons /></ProtectedRoute>} />
+              <Route path="/billing/success" element={<ProtectedRoute moduleId="billing"><BillingSuccess /></ProtectedRoute>} />
               <Route path="/estimates" element={<ProtectedRoute moduleId="estimates"><Estimates /></ProtectedRoute>} />
               <Route path="/help" element={<Help />} />
               <Route path="/services" element={<ProtectedRoute moduleId="services"><Services /></ProtectedRoute>} />

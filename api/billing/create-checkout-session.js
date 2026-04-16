@@ -29,13 +29,22 @@ export default async function handler(req, res) {
         workspaceId: workspaceId || "",
         ...(metadata || {}),
       },
-      payment_links: true,
-      return_url: `${process.env.VITE_APP_URL || "https://app.agenxify.com"}/billing/plans`,
+      return_url: `${process.env.VITE_APP_URL || "https://app.agenxify.com"}/billing/success`,
     });
 
-    return res.status(200).json({ url: session.payment_link });
+    console.log("Dodo Session Created:", session.id);
+
+    // Dodo SDK typically returns checkout_url
+    const checkoutUrl = session.checkout_url || session.payment_link;
+
+    if (!checkoutUrl) {
+      console.error("Dodo Response missing URL:", session);
+      return res.status(500).json({ error: "Dodo Payments did not return a checkout URL. Response: " + JSON.stringify(session) });
+    }
+
+    return res.status(200).json({ url: checkoutUrl });
   } catch (err) {
-    console.error("Dodo Checkout Error:", err);
-    return res.status(500).json({ error: err.message });
+    console.error("Dodo Checkout Error Details:", err);
+    return res.status(500).json({ error: err.message || "Failed to create checkout session" });
   }
 }

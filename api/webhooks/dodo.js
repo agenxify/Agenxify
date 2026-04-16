@@ -91,36 +91,50 @@ export default async function handler(req, res) {
   if (DODO_WEBHOOK_SECRET) {
     const signature = req.headers["x-dodo-signature"];
     const hmac = crypto.createHmac("sha256", DODO_WEBHOOK_SECRET);
-    // Vercel handles raw body differently - using stringified body for signature
-    const bodyString = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const bodyString = JSON.stringify(req.body);
     hmac.update(bodyString);
     const expectedSignature = hmac.digest("hex");
     
     if (signature !== expectedSignature) {
-      console.error("Invalid Webhook Signature. Expected:", expectedSignature, "Got:", signature);
-      // We return 200 to Dodo to avoid excessive retries if it's just a config mismatch, but log it
-      // return res.status(401).send("Invalid Signature"); 
+      console.warn("Webhook Signature Mismatch. Check DODO_WEBHOOK_SECRET.");
     }
   }
 
   const event = req.body;
-  const metadata = event.data?.metadata || {};
+  
+  // Dodo event structure: data is the main object, and metadata is inside data
+  const eventData = event.data || {};
+  const metadata = eventData.metadata || {};
+  
   const { userId, workspaceId, purchaseType, planId, billingCycle, addonId } = metadata;
-  const productId = event.data?.product_id;
-  const amountPaid = event.data?.total_amount || event.data?.amount || 0;
+  const productId = eventData.product_id;
+  const amountPaid = eventData.total_amount || eventData.amount || 0;
+
+  console.log("Processing Dodo Webhook:", {
+    type: event.type,
+    userId,
+    workspaceId,
+    purchaseType,
+    productId,
+    amount: amountPaid
+  });
 
   if (!userId) {
-    return res.status(200).send("No userId found in metadata");
+    console.error("Webhook Error: No userId in metadata", eventData);
+    return res.status(200).send("No userId found in metadata. Cannot process.");
   }
 
   try {
     // 1. Handle Subscriptions
-    if (purchaseType === 'subscription' || event.type.startsWith('subscription.')) {
+    if (purchaseType === 'subscription' || (event.type && event.type.startsWith('subscription.'))) {
+      // Logic for active subscriptions
       if (['subscription.active', 'subscription.created', 'subscription.renewed'].includes(event.type) || purchaseType === 'subscription') {
-        const planKey = planId?.toLowerCase() || productId || "free";
+        const planKey = planId?.toLowerCase() || (productId ? productId.split('_')[1] : null) || "free";
         const planData = AVAILABLE_PLANS[planKey] || AVAILABLE_PLANS['starter'];
 
-        await supabase
+        console.log(`Updating subscription for user ${userId} to plan ${planKey}`);
+
+        const { error: subError } = await supabase
           .from("subscriptions")
           .update({
             plan_id: planKey,
@@ -146,6 +160,8 @@ export default async function handler(req, res) {
           })
           .eq("owner_id", userId);
 
+        if (subError) throw subError;
+
         if (workspaceId) {
           await supabase.from('workspaces').update({ plan_id: planKey }).eq('id', workspaceId);
         }
@@ -154,12 +170,21 @@ export default async function handler(req, res) {
     // 2. Handle Credits
     else if (purchaseType === 'credits' || (event.type === "payment.succeeded" && productId?.startsWith('pdt_0Ncpl'))) {
          let creditAmount = 0;
-         if (productId === 'pdt_0NcplIaIzEFtvIBsrPuSm') creditAmount = 5000;
-         else if (productId === 'pdt_0NcplPOW4ftUAFciHSZ7G') creditAmount = 20000;
-         else if (productId === 'pdt_0NcplZqPBlqEFWxFPjlyf') creditAmount = 50000;
-         else if (productId === 'pdt_0NckvHhyg5xsRY3Bsz67A') creditAmount = 150000;
+         // Match based on project IDs from dodo.ts
+         if (productId === 'pdt_0NcplIaIzEFtvIBsrPuSm') creditAmount = 500;   // Starter Boost
+         else if (productId === 'pdt_0NcplPOW4ftUAFciHSZ7G') creditAmount = 1500; // Growth Pack
+         else if (productId === 'pdt_0NcplZqPBlqEFWxFPjlyf') creditAmount = 5000; // Power User
+         else if (productId === 'pdt_0NckvHhyg5xsRY3Bsz67A') creditAmount = 20000; // Agency Scale
+         
+         // Fallback if productId doesn't match predefined but it's a credit purchase
+         if (creditAmount === 0 && purchaseType === 'credits') {
+            // Estimate based on amount if possible, or just default
+            creditAmount = 1000; 
+         }
 
-         await supabase
+         console.log(`Adding ${creditAmount} credits to user ${userId}`);
+
+         const { error: creditError } = await supabase
            .from("topup_credits")
            .insert({
              owner_id: userId,
@@ -167,18 +192,27 @@ export default async function handler(req, res) {
              amount: creditAmount,
              cost: amountPaid / 100,
              status: 'active',
-             metadata: { dodo_payment_id: event.data?.payment_id || event.data?.transaction_id, productId }
+             metadata: { 
+               dodo_payment_id: eventData.payment_id || eventData.transaction_id, 
+               productId,
+               raw_event: event.type
+             }
            });
+           
+         if (creditError) throw creditError;
     }
     // 3. Handle Addons
     else if (purchaseType === 'addon' || event.type === "payment.succeeded") {
-        await supabase
+        console.log(`Adding addon ${addonId || productId} to user ${userId}`);
+        const { error: addonError } = await supabase
           .from("purchased_addons")
           .insert({
             owner_id: userId,
-            workspace_id: workspaceId,
+            workspace_id: workspaceId || null,
             addon_id: addonId || productId,
           });
+        
+        if (addonError) throw addonError;
     }
 
     // 4. Billing History
@@ -188,19 +222,23 @@ export default async function handler(req, res) {
        if (wsData) finalWorkspaceId = wsData.id;
     }
 
-    await supabase.from("billing_history").insert({
-      owner_id: userId,
-      workspace_id: finalWorkspaceId,
-      invoice_number: event.data?.payment_id || event.data?.subscription_id || `INV-${Date.now()}`,
-      amount: amountPaid / 100,
-      status: 'Paid',
-      line_items: [{ name: event.data?.product_name || 'Agencify Purchase', amount: amountPaid / 100 }],
-      date_paid: new Date().toISOString(),
-    });
+    if (finalWorkspaceId) {
+      await supabase.from("billing_history").insert({
+        owner_id: userId,
+        workspace_id: finalWorkspaceId,
+        invoice_number: eventData.payment_id || eventData.subscription_id || `INV-${Date.now()}`,
+        amount: amountPaid / 100,
+        status: 'Paid',
+        line_items: [{ name: eventData.product_name || 'Agencify Purchase', amount: amountPaid / 100 }],
+        date_paid: new Date().toISOString(),
+      });
+    }
 
     return res.status(200).send("Webhook Processed Successfully");
   } catch (err) {
-    console.error("Webhook Error:", err);
+    console.error("Webhook Execution Error:", err);
+    // Still return 200 to Dodo to prevent re-deliveries if we had a non-critical logic error, 
+    // but in a real case we might want to return 500.
     return res.status(500).json({ error: err.message });
   }
 }
